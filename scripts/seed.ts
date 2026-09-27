@@ -80,17 +80,30 @@ async function seed() {
   });
 
   const cats = await Category.insertMany([
-    { name: "PLC", slug: "plc", type: "product", order: 1, description: "Programmable logic controllers and I/O modules." },
-    { name: "Motors", slug: "motors", type: "product", order: 2, description: "Induction, servo and gear motors." },
-    { name: "VFD / Drives", slug: "drives", type: "product", order: 3, description: "Variable frequency drives and soft starters." },
-    { name: "Sensors", slug: "sensors", type: "product", order: 4, description: "Proximity, photoelectric and encoder sensors." },
-    { name: "Contactors", slug: "contactors", type: "product", order: 5, description: "AC contactors and motor starters." },
-    { name: "Relays", slug: "relays", type: "product", order: 6, description: "Control, timer and overload relays." },
-    { name: "Circuit Breakers", slug: "breakers", type: "product", order: 7, description: "MCB, MCCB and protection devices." },
-    { name: "HMI & Display", slug: "hmi", type: "product", order: 8, description: "Operator panels and industrial displays." },
-    { name: "Power Supplies", slug: "power-supplies", type: "product", order: 9, description: "SMPS and DIN-rail power units." },
-    { name: "Bearings", slug: "bearings", type: "product", order: 10, description: "Ball bearings and mechanical wear parts." },
-    { name: "Cables & Wires", slug: "cables", type: "product", order: 11, description: "Control cable, motor cable and lugs." },
+    { name: "MACHINERIES", slug: "machineries", type: "product", order: 0, description: "We supply Injection molding machine of remarkable brands only. Because customer satisfaction is our main goal." },
+    { name: "Injection molding machine", slug: "injection-molding-machine", type: "product", order: 1, description: "Industrial plastic injection molding machinery and auxiliary equipment." },
+    { name: "PLC & HMI", slug: "plc-hmi", type: "product", order: 2, description: "Programmable logic controllers, HMI touch screens and complete automation sets." },
+    { name: "Circuit boards/cards", slug: "circuit-boardscards", type: "product", order: 3, description: "MMR, temperature, I/O, amplifier and specialized control boards." },
+    { name: "Servo System (Servo motor , Servo Drive , Servo pump)", slug: "servo-system-servo-motor-servo-drive-servo-pump", type: "product", order: 4, description: "High-precision servo drives, Servo motors, pumps, encoders, Breaking Resistor, Pressure sensor and accessories." },
+    { name: "Servo Motors", slug: "servo-motors", type: "product", order: 5, description: "Induction, servo and gear motors." },
+    { name: "Servo Drives", slug: "servo-drives", type: "product", order: 6, description: "INOVANCE, Hilectro, INVT, Techmation, EST, HiTech, Panasonic, Siemens, Xingtai, Haitian etc for Injection molding machine." },
+    { name: "Hydraulic Pumps", slug: "hydraulic-pumps", type: "product", order: 7, description: "SUMITOMO, Yuken, Rexroth, Techmation, HYTEK, VJOKERS, Gear pump, vane pump etc Pumps for your machine." },
+    { name: "Hydraulic items", slug: "hydraulic-items", type: "product", order: 9, description: "Hydraulic valve, pump, pipe and fittings items." },
+    { name: "Hopper Dryer and Vaccum Autoloader", slug: "hopper-dryer-and-vaccum-autoloader", type: "product", order: 10, description: "Preheating hopper dryer and vaccum auto loader for injection molding machine. 300G, 600G, 700G, 800G, 900G etc." },
+    { name: "Industrial Chiller", slug: "industrial-chiller", type: "product", order: 11, description: "Air Cooled chiller, Water cooled Industrial refrigeration Chiller." },
+    { name: "Crusher machine", slug: "crusher-machine", type: "product", order: 12, description: "Heavy-duty plastic granulators, shredders and crushing machinery." },
+    { name: "Mixer Machine", slug: "mixer-machine", type: "product", order: 13, description: "Industrial horizontal and vertical plastic resin or color mixer machine." },
+    { name: "HDPE Blow molding machine (BMM)", slug: "hdpe-blow-molding-machine-bmm", type: "product", order: 14, description: "Extruder machine, Extrusion machine, HDPE Blow molding machine etc." },
+    { name: "Semi Auto PET Blowing machine", slug: "semi-auto-pet-blowing-machine", type: "product", order: 15, description: "Semi Auto PET Blow machine, Heating chamber with High Pressure Air Compressor." },
+    { name: "VFD / Inverters", slug: "vfd-inverters", type: "product", order: 16, description: "Variable frequency drives (VFD) and soft starters." },
+    { name: "Printing and Packaging machine", slug: "printing-and-packaging-machine", type: "product", order: 17, description: "Heat seal, shrink wrap, hot stamping and pad printing machines." },
+    { name: "Sensors", slug: "sensors", type: "product", order: 18, description: "Proximity, photoelectric and encoder sensors." },
+    { name: "Relay, timer, counter etc", slug: "relay-timer-counter-etc", type: "product", order: 19, description: "Relay, timer, counter, overload relays etc." },
+    { name: "Over head Industrial Crane", slug: "over-head-industrial-crane", type: "product", order: 21, description: "Industrial over head crane for your industry." },
+    { name: "Air Compressor", slug: "air-compressor", type: "product", order: 23, description: "Air compressor systems and industrial cooling equipment." },
+    { name: "HMI & Display", slug: "hmi-display", type: "product", order: 25, description: "Operator panels and industrial HMI displays." },
+    { name: "Industrial Robot", slug: "industrial-robot", type: "product", order: 27, description: "Industrial Robot to make automated production system to reduce production cost, Improve product Quality and accuracy for smooth production." },
+    { name: "Automation items", slug: "automation-items", type: "product", order: 29, description: "Automation make your factory highly productive by de" },
     { name: "Technical Service", slug: "technical-service", type: "service", order: 1 },
   ]);
 
@@ -200,6 +213,162 @@ async function seed() {
 
   const svcBySlug = Object.fromEntries(services.map((s) => [s.slug, s]));
 
+  // Seed all 89 subcategories
+  const createdSubSlugs = new Set<string>();
+  for (const catDef of [
+    {
+      name: "MACHINERIES",
+      subcategories: [
+        { name: "Horizontal Injection molding machine", order: 1 },
+        { name: "Vertical Injection molding machine", order: 2 },
+        { name: "Twin color Injection molding machine", order: 3 },
+        { name: "HDPE Blow molding machine (BMM)", order: 4 },
+        { name: "PET Blow molding machine", order: 5 },
+        { name: "Crusher Machine", order: 6 },
+        { name: "Mixer machine", order: 7 },
+        { name: "Industrial Chiller", order: 8 },
+        { name: "Heat Seal Printing machine", order: 9 },
+        { name: "PAD Printing machine", order: 10 },
+        { name: "Hot Stamping machine", order: 11 },
+        { name: "Packaging Machineries", order: 12 },
+      ],
+    },
+    {
+      name: "Injection molding machine",
+      subcategories: [
+        { name: "Horizontal Injection molding machine", order: 1 },
+        { name: "Vertical Injection molding machine", order: 2 },
+        { name: "Twin Color injection molding machine", order: 3 },
+        { name: "PLC & HMI Full Set", order: 4 },
+        { name: "TECH1 full PLC set", order: 5 },
+        { name: "TECH2 PLC full set", order: 6 },
+        { name: "AK668 PLC full set", order: 7 },
+        { name: "AK628 PLC full set", order: 8 },
+        { name: "AK580 PLC full set", order: 9 },
+        { name: "iTech5610 PLC full set", order: 10 },
+        { name: "iTech5620 PLC full set", order: 11 },
+        { name: "iTech5630 PLC full set", order: 12 },
+        { name: "Porcheson MS300 PLC set", order: 13 },
+        { name: "Porcheson MS500 PLC set", order: 14 },
+        { name: "Porcheson MS700 PLC set", order: 15 },
+        { name: "Ai530 PLC full set", order: 16 },
+        { name: "Mi530Li PLC full set", order: 17 },
+      ],
+    },
+    {
+      name: "PLC & HMI",
+      subcategories: [
+        { name: "Injection molding machine PLC", order: 1 },
+        { name: "Semi Auto PET blow controller", order: 2 },
+        { name: "PLC full set", order: 3 },
+        { name: "HMI full set", order: 4 },
+        { name: "TECH1 PLC set", order: 5 },
+        { name: "TECH2 PLC set", order: 6 },
+        { name: "AK580 PLC set", order: 7 },
+        { name: "AK628 PLC set", order: 8 },
+        { name: "AK668 PLC set", order: 9 },
+        { name: "iTech PLC set", order: 10 },
+        { name: "Porcheson MS300 PLC set", order: 11 },
+        { name: "Porcheson MS500 PLC set", order: 12 },
+        { name: "Porcheson MS700 PLC set", order: 13 },
+        { name: "HAITIAN HMI", order: 14 },
+        { name: "MMI card", order: 15 },
+        { name: "Likui PLC", order: 16 },
+        { name: "Ai530Li", order: 17 },
+        { name: "Mi538Li", order: 18 },
+        { name: "HERING 628", order: 19 },
+        { name: "Siemens", order: 20 },
+        { name: "DELTA", order: 21 },
+        { name: "MITSUBISHI", order: 22 },
+        { name: "ALLEN BRADLY", order: 23 },
+      ],
+    },
+    {
+      name: "Circuit boards/cards",
+      subcategories: [
+        { name: "MMR card (MMR 270, MMR 255)", order: 1 },
+        { name: "Temperature card", order: 2 },
+        { name: "Pressure & Flow control card", order: 3 },
+        { name: "Thermo couple connection card", order: 4 },
+        { name: "I/O Card", order: 5 },
+        { name: "PLC I/O Amplifier card", order: 6 },
+        { name: "TECH1", order: 7 },
+        { name: "TECH2", order: 8 },
+        { name: "AK580", order: 9 },
+        { name: "AK668", order: 10 },
+        { name: "MS300", order: 11 },
+        { name: "MS500", order: 12 },
+        { name: "MS700", order: 13 },
+        { name: "Ai530Li", order: 14 },
+        { name: "Mi530Li", order: 15 },
+        { name: "Ai580T6", order: 16 },
+        { name: "Mi580T8", order: 17 },
+        { name: "Ai103", order: 18 },
+      ],
+    },
+    {
+      name: "Servo System (Servo motor , Servo Drive , Servo pump)",
+      subcategories: [
+        { name: "Servo Drive (INOVANCE, Hilectro, Techmation, HiTech, KEB)", order: 1 },
+        { name: "Servo motor", order: 2 },
+        { name: "Servo pump", order: 3 },
+        { name: "Encoder", order: 4 },
+        { name: "Breaking Resistor", order: 5 },
+        { name: "Encoder cable", order: 6 },
+        { name: "Coupling items", order: 7 },
+        { name: "Pressure sensor", order: 8 },
+      ],
+    },
+    {
+      name: "Hopper Dryer and Vaccum Autoloader",
+      subcategories: [
+        { name: "Semi Auto PET blowing machine", order: 1 },
+        { name: "HDPE blow molding machine", order: 2 },
+        { name: "Extrusion blowing machine for sheet", order: 3 },
+      ],
+    },
+    {
+      name: "Mixer Machine",
+      subcategories: [{ name: "BLC sub", order: 1 }],
+    },
+    {
+      name: "Printing and Packaging machine",
+      subcategories: [
+        { name: "Heat seal printing machine", order: 1 },
+        { name: "Shrink wrapping machine", order: 2 },
+        { name: "Hot stamping machine", order: 3 },
+        { name: "PAD Printing machine", order: 4 },
+      ],
+    },
+    {
+      name: "Air Compressor",
+      subcategories: [
+        { name: "Water cooled chiller", order: 1 },
+        { name: "Air cooled chiller", order: 2 },
+      ],
+    },
+    {
+      name: "HMI & Display",
+      subcategories: [{ name: "HMI", order: 1 }],
+    },
+  ]) {
+    const parentCat = cats.find((c) => c.name === catDef.name);
+    if (!parentCat) continue;
+    for (const sub of catDef.subcategories) {
+      let slug = sub.name.toLowerCase().trim().replace(/[^\w\s-]/g, "").replace(/[\s_-]+/g, "-").replace(/^-+|-+$/g, "");
+      if (createdSubSlugs.has(slug)) slug = `${parentCat.slug}-${slug}`;
+      if (createdSubSlugs.has(slug)) slug = `${slug}-${sub.order}`;
+      createdSubSlugs.add(slug);
+      await SubCategory.create({
+        name: sub.name,
+        slug,
+        category: parentCat._id,
+        order: sub.order,
+        published: true,
+      });
+    }
+  }
+
   const products = await Product.insertMany([
     // 4 Featured Products (Screenshot 1st row)
     {
@@ -207,7 +376,7 @@ async function seed() {
       slug: "hmi-7-inch",
       sku: "NES-HMI-7",
       brand: "Weintek / Delta class",
-      category: bySlug.hmi._id,
+      category: bySlug["hmi-display"]._id,
       shortDescription: "7-inch industrial HMI with Ethernet and serial.",
       description:
         "Operator panel for PLC visualization. Drivers for common Delta, Siemens and Mitsubishi PLCs.",
@@ -245,7 +414,7 @@ async function seed() {
       slug: "induction-motor-1-5hp",
       sku: "NES-MTR-15",
       brand: "Generic IE2",
-      category: bySlug.motors._id,
+      category: bySlug["servo-motors"]._id,
       shortDescription: "Foot-mounted 1.5 HP motor for pumps and conveyors.",
       description:
         "Reliable three-phase induction motor for light industrial drives. Confirm frame and shaft before ordering.",
@@ -264,7 +433,7 @@ async function seed() {
       slug: "vfd-2-2kw",
       sku: "NES-VFD-22",
       brand: "Delta / INVT class",
-      category: bySlug.drives._id,
+      category: bySlug["vfd-inverters"]._id,
       shortDescription: "2.2 kW variable frequency drive for motor speed control.",
       description:
         "Compact VFD for soft start, speed control and energy savings on small three-phase motors.",
@@ -304,7 +473,7 @@ async function seed() {
       slug: "control-cable-4c",
       sku: "NES-CBL-15-4",
       brand: "BRB / equivalent",
-      category: bySlug.cables._id,
+      category: bySlug["automation-items"]._id,
       shortDescription: "Flexible 4-core control cable for panels and field I/O.",
       description:
         "Sold per meter. Suitable for 24 VDC I/O and 220 VAC control circuits.",
@@ -323,7 +492,7 @@ async function seed() {
       slug: "smps-24v-10a",
       sku: "NES-PSU-2410",
       brand: "Mean Well class",
-      category: bySlug["power-supplies"]._id,
+      category: bySlug["automation-items"]._id,
       shortDescription: "24 VDC 10A DIN-rail power supply for PLC panels.",
       description:
         "Industrial SMPS for PLC, HMI, sensors and relays. Size with 20–30% headroom.",
@@ -342,7 +511,7 @@ async function seed() {
       slug: "bearing-6205",
       sku: "NES-BRG-6205",
       brand: "SKF / equivalent",
-      category: bySlug.bearings._id,
+      category: bySlug["hydraulic-items"]._id,
       shortDescription: "6205 bearing for motors, pulleys and fans.",
       description:
         "Standard 6205 deep groove ball bearing. Sealed options for dusty workshops.",
@@ -361,7 +530,7 @@ async function seed() {
       slug: "contactor-40a",
       sku: "NES-CNT-40",
       brand: "Schneider / Chint class",
-      category: bySlug.contactors._id,
+      category: bySlug["relay-timer-counter-etc"]._id,
       shortDescription: "40A contactor for larger motors and feeders.",
       description:
         "40A AC contactor for 5–10 HP class motors depending on utilization category.",
@@ -382,7 +551,7 @@ async function seed() {
       slug: "siemens-s7-1200-cpu-1214c",
       sku: "NES-PLC-1214",
       brand: "Siemens",
-      category: bySlug.plc._id,
+      category: bySlug["plc-hmi"]._id,
       shortDescription: "Compact PLC CPU for machine and process control panels.",
       description:
         "Siemens SIMATIC S7-1200 CPU 1214C for small to mid automation. Suitable for packaging, conveyors and educational benches.",
@@ -401,7 +570,7 @@ async function seed() {
       slug: "delta-dvp-14ss2",
       sku: "NES-PLC-D14",
       brand: "Delta",
-      category: bySlug.plc._id,
+      category: bySlug["plc-hmi"]._id,
       shortDescription: "Slim PLC for compact control cabinets and OEM machines.",
       description:
         "Delta DVP Slim series PLC — popular in Bangladesh workshops for cost-effective machine control.",
@@ -420,7 +589,7 @@ async function seed() {
       slug: "mitsubishi-fx5u-32m",
       sku: "NES-PLC-FX5",
       brand: "Mitsubishi",
-      category: bySlug.plc._id,
+      category: bySlug["plc-hmi"]._id,
       shortDescription: "iQ-F series compact PLC with built-in Ethernet.",
       description:
         "Mitsubishi FX5U for OEMs who need Ethernet, motion and a clear upgrade path from FX3.",
@@ -439,7 +608,7 @@ async function seed() {
       slug: "omron-cp1e-n20",
       sku: "NES-PLC-CP1E",
       brand: "Omron",
-      category: bySlug.plc._id,
+      category: bySlug["plc-hmi"]._id,
       shortDescription: "Entry Omron PLC for simple sequential machines.",
       description:
         "CP1E is a practical choice for small machines, student projects and replacement of aging relay logic.",
@@ -458,7 +627,7 @@ async function seed() {
       slug: "induction-motor-3hp",
       sku: "NES-MTR-30",
       brand: "Generic IE2",
-      category: bySlug.motors._id,
+      category: bySlug["servo-motors"]._id,
       shortDescription: "3 HP industrial motor for fans, mixers and machine tools.",
       description:
         "Standard 3 HP three-phase motor. Pair with a matching VFD for soft start and speed control.",
@@ -477,7 +646,7 @@ async function seed() {
       slug: "vfd-5-5kw",
       sku: "NES-VFD-55",
       brand: "Delta / INVT class",
-      category: bySlug.drives._id,
+      category: bySlug["vfd-inverters"]._id,
       shortDescription: "5.5 kW VFD for pumps, fans and conveyor lines.",
       description:
         "Mid-range VFD with PID and multi-speed control. Confirm motor FLA before commissioning.",
@@ -515,7 +684,7 @@ async function seed() {
       slug: "contactor-25a",
       sku: "NES-CNT-25",
       brand: "Schneider / Chint class",
-      category: bySlug.contactors._id,
+      category: bySlug["relay-timer-counter-etc"]._id,
       shortDescription: "25A 3-pole AC contactor for motor starters.",
       description:
         "Standard 25A contactor for DOL starters and control panels. Coil voltage on request.",
@@ -534,7 +703,7 @@ async function seed() {
       slug: "thermal-overload-relay",
       sku: "NES-RLY-OL",
       brand: "Schneider / Chint class",
-      category: bySlug.relays._id,
+      category: bySlug["relay-timer-counter-etc"]._id,
       shortDescription: "Adjustable thermal overload for motor protection.",
       description:
         "Mounts under matching contactors. Set the FLA to protect the motor from stall and overload.",
@@ -553,7 +722,7 @@ async function seed() {
       slug: "timer-relay",
       sku: "NES-RLY-TMR",
       brand: "Omron / equivalent",
-      category: bySlug.relays._id,
+      category: bySlug["relay-timer-counter-etc"]._id,
       shortDescription: "Multi-mode DIN timer for sequential control.",
       description:
         "On-delay, off-delay and cyclic modes for machines that still use relay logic.",
@@ -572,7 +741,7 @@ async function seed() {
       slug: "mcb-32a-3p",
       sku: "NES-BRK-32",
       brand: "Schneider / Chint class",
-      category: bySlug.breakers._id,
+      category: bySlug["circuit-boardscards"]._id,
       shortDescription: "32A three-pole miniature circuit breaker.",
       description:
         "C-curve MCB for motor and distribution feeders in control panels.",
