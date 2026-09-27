@@ -6,6 +6,7 @@ import { getCurrentAdminUser, logActivity } from "@/lib/auth";
 import { fallbackSettings } from "@/lib/data";
 import { serialize } from "@/lib/serialize";
 import { isRetiredPhone } from "@/lib/official-contact";
+import { resolveGoogleMapsUrlAsync } from "@/lib/google-maps";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,10 @@ export async function GET() {
   const merged = {
     ...fallbackSettings,
     ...(doc || {}),
+    contactPage: {
+      ...fallbackSettings.contactPage,
+      ...((doc?.contactPage as Record<string, unknown>) || {}),
+    },
     social: {
       ...fallbackSettings.social,
       ...((doc?.social as Record<string, string>) || {}),
@@ -87,6 +92,43 @@ export async function PUT(req: Request) {
       if (isRetiredPhone(String(settings.phone3 || ""))) {
         settings.phone3 = "";
       }
+
+      // If user provided a mapShareUrl or mapEmbedUrl, make sure mapEmbedUrl is a valid embed URL
+      const candidateMap = (settings.mapShareUrl || settings.mapEmbedUrl || "").trim();
+      const zoom = Number(settings.mapZoom) || 15;
+      const fullAddress = [
+        settings.addressHouse ? `House ${settings.addressHouse}` : "",
+        settings.addressRoad ? `Road ${settings.addressRoad}` : "",
+        settings.addressBlock ? `Block ${settings.addressBlock}` : "",
+        settings.address || "",
+        settings.addressCity || "",
+      ]
+        .filter(Boolean)
+        .join(", ");
+
+      if (candidateMap) {
+        try {
+          const resolved = await resolveGoogleMapsUrlAsync(candidateMap, fullAddress, zoom);
+          if (resolved.embedUrl) {
+            settings.mapEmbedUrl = resolved.embedUrl;
+          }
+          if (resolved.shareUrl) {
+            settings.mapShareUrl = resolved.shareUrl;
+          }
+        } catch (err) {
+          console.warn("Map resolution error during save:", err);
+        }
+      } else if (fullAddress) {
+        try {
+          const resolved = await resolveGoogleMapsUrlAsync("", fullAddress, zoom);
+          if (resolved.embedUrl) {
+            settings.mapEmbedUrl = resolved.embedUrl;
+          }
+        } catch {
+          // ignore
+        }
+      }
+
       const existing = await SiteSettings.findOne().sort({ updatedAt: -1 });
       if (existing) {
         const resDoc = await SiteSettings.findByIdAndUpdate(

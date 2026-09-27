@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import type { IContactPageSettings } from "@/lib/models/SiteSettings";
 
 type Status = "idle" | "loading" | "success" | "error";
 
@@ -8,13 +9,31 @@ export function ContactForm({
   defaultSubject,
   productId,
   serviceId,
+  content,
 }: {
   defaultSubject?: string;
   productId?: string;
   serviceId?: string;
+  content?: IContactPageSettings;
 }) {
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState("");
+
+  const nameLabel = content?.nameLabel || "Name";
+  const emailFieldLabel = content?.emailFieldLabel || "Email";
+  const phoneFieldLabel = content?.phoneFieldLabel || "Phone";
+  const companyLabel = content?.companyLabel || "Company / Workshop";
+  const inquiryTypeLabel = content?.inquiryTypeLabel || "Inquiry type";
+  const subjectLabel = content?.subjectLabel || "Subject";
+  const messageLabel = content?.messageLabel || "Message";
+  const submitButtonText = content?.submitButtonText || "Send inquiry";
+  const successMessage = content?.successMessage || "Message received. We will reply shortly.";
+  const fallbackErrorMessage = content?.errorMessage || "Failed to send message. Please try again.";
+
+  const inquiryOptions =
+    Array.isArray(content?.inquiryOptions) && content.inquiryOptions.length > 0
+      ? content.inquiryOptions
+      : ["Product quote", "Parts sourcing", "Technical service", "Other"];
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -35,47 +54,51 @@ export function ContactForm({
       });
       const json = await res.json();
       if (!res.ok || !json.success) {
-        throw new Error(json.error || "Something went wrong");
+        throw new Error(json.error || fallbackErrorMessage);
       }
       setStatus("success");
       form.reset();
     } catch (err) {
       setStatus("error");
-      setError(err instanceof Error ? err.message : "Failed to send");
+      setError(err instanceof Error ? err.message : fallbackErrorMessage);
     }
   }
 
   return (
     <form onSubmit={onSubmit} className="flex h-full flex-col space-y-1.5">
+      {content?.formHeading && (
+        <h2 className="text-base font-semibold text-navy mb-1">{content.formHeading}</h2>
+      )}
       <div className="grid gap-1.5 sm:grid-cols-2">
         <label className="block text-[11px] font-semibold uppercase tracking-wider text-steel">
-          Name
+          {nameLabel}
           <input name="name" required className="field mt-0.5 !px-2.5 !py-1.5" />
         </label>
         <label className="block text-[11px] font-semibold uppercase tracking-wider text-steel">
-          Email
+          {emailFieldLabel}
           <input name="email" type="email" required className="field mt-0.5 !px-2.5 !py-1.5" />
         </label>
         <label className="block text-[11px] font-semibold uppercase tracking-wider text-steel">
-          Phone
+          {phoneFieldLabel}
           <input name="phone" type="tel" className="field mt-0.5 !px-2.5 !py-1.5" />
         </label>
         <label className="block text-[11px] font-semibold uppercase tracking-wider text-steel">
-          Company / Workshop
+          {companyLabel}
           <input name="company" className="field mt-0.5 !px-2.5 !py-1.5" />
         </label>
       </div>
       <label className="block text-[11px] font-semibold uppercase tracking-wider text-steel">
-        Inquiry type
-        <select name="inquiryType" defaultValue="product" className="field mt-0.5 !px-2.5 !py-1.5">
-          <option value="product">Product quote</option>
-          <option value="sourcing">Parts sourcing</option>
-          <option value="service">Technical service</option>
-          <option value="other">Other</option>
+        {inquiryTypeLabel}
+        <select name="inquiryType" defaultValue={inquiryOptions[0]} className="field mt-0.5 !px-2.5 !py-1.5">
+          {inquiryOptions.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
         </select>
       </label>
       <label className="block text-[11px] font-semibold uppercase tracking-wider text-steel">
-        Subject
+        {subjectLabel}
         <input
           name="subject"
           required
@@ -84,14 +107,14 @@ export function ContactForm({
         />
       </label>
       <label className="block text-[11px] font-semibold uppercase tracking-wider text-steel">
-        Message
+        {messageLabel}
         <textarea name="message" required rows={3} className="field mt-0.5 !px-2.5 !py-1.5" />
       </label>
       <button type="submit" disabled={status === "loading"} className="btn-orange mt-auto disabled:opacity-60">
-        {status === "loading" ? "Sending…" : "Send inquiry"}
+        {status === "loading" ? "Sending…" : submitButtonText}
       </button>
       {status === "success" && (
-        <p className="text-sm text-signal">Message received. We will reply shortly.</p>
+        <p className="text-sm text-signal">{successMessage}</p>
       )}
       {status === "error" && <p className="text-sm text-orange">{error}</p>}
     </form>

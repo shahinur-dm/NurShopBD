@@ -1,8 +1,30 @@
 import { Schema, models, model, type Types } from "mongoose";
 
+export interface IContactPageSettings {
+  heading?: string;
+  description?: string;
+  phoneLabel?: string;
+  emailLabel?: string;
+  addressLabel?: string;
+  hoursLabel?: string;
+  formHeading?: string;
+  nameLabel?: string;
+  emailFieldLabel?: string;
+  phoneFieldLabel?: string;
+  companyLabel?: string;
+  inquiryTypeLabel?: string;
+  inquiryOptions?: string[];
+  subjectLabel?: string;
+  messageLabel?: string;
+  submitButtonText?: string;
+  successMessage?: string;
+  errorMessage?: string;
+}
+
 export interface ISiteSettings {
   _id: Types.ObjectId | string;
   brandName: string;
+  companyName?: string;
   tagline: string;
   description: string;
   email: string;
@@ -14,8 +36,13 @@ export interface ISiteSettings {
   addressHouse?: string;
   addressRoad?: string;
   addressBlock?: string;
+  addressCity?: string;
   hours: string;
+  workingDays?: string;
+  mapShareUrl?: string;
   mapEmbedUrl: string;
+  mapZoom?: number;
+  contactPage?: IContactPageSettings;
   logoUrl?: string;
   footerLogoUrl?: string;
   favicon?: string;
@@ -60,6 +87,7 @@ export interface ISiteSettings {
 const SiteSettingsSchema = new Schema<ISiteSettings>(
   {
     brandName: { type: String, default: "NUR SHOP BD" },
+    companyName: { type: String, default: "NUR SHOP BD" },
     tagline: { type: String, default: "Machine, spare parts and Technical service provider" },
     description: {
       type: String,
@@ -78,8 +106,38 @@ const SiteSettingsSchema = new Schema<ISiteSettings>(
     addressHouse: { type: String, default: "43-44" },
     addressRoad: { type: String, default: "1" },
     addressBlock: { type: String, default: "B" },
+    addressCity: { type: String, default: "Mirpur-1, Dhaka-1216, Bangladesh" },
     hours: { type: String, default: "Sat–Thu 9:00–18:00" },
+    workingDays: { type: String, default: "Saturday – Thursday" },
+    mapShareUrl: { type: String, default: "" },
     mapEmbedUrl: { type: String, default: "" },
+    mapZoom: { type: Number, default: 15 },
+    contactPage: {
+      heading: { type: String, default: "Send a part number or photo" },
+      description: {
+        type: String,
+        default: "We reply with options, stock and pricing. Same desk for products and technical service.",
+      },
+      phoneLabel: { type: String, default: "Phone" },
+      emailLabel: { type: String, default: "Email" },
+      addressLabel: { type: String, default: "Address" },
+      hoursLabel: { type: String, default: "Hours" },
+      formHeading: { type: String, default: "" },
+      nameLabel: { type: String, default: "Name" },
+      emailFieldLabel: { type: String, default: "Email" },
+      phoneFieldLabel: { type: String, default: "Phone" },
+      companyLabel: { type: String, default: "Company / Workshop" },
+      inquiryTypeLabel: { type: String, default: "Inquiry type" },
+      inquiryOptions: {
+        type: [String],
+        default: ["Product quote", "Parts sourcing", "Technical service", "Other"],
+      },
+      subjectLabel: { type: String, default: "Subject" },
+      messageLabel: { type: String, default: "Message" },
+      submitButtonText: { type: String, default: "Send Inquiry" },
+      successMessage: { type: String, default: "Message received. We will reply shortly." },
+      errorMessage: { type: String, default: "Failed to send message. Please try again." },
+    },
     logoUrl: { type: String, default: "" },
     footerLogoUrl: { type: String, default: "" },
     favicon: { type: String, default: "" },

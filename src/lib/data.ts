@@ -59,6 +59,7 @@ export { defaultFooterQuickLinks, defaultFooterServices };
 export const fallbackSettings: ISiteSettings = {
   _id: "fallback",
   brandName: "NUR SHOP BD",
+  companyName: "NUR SHOP BD",
   tagline: "Machine, spare parts and Technical service provider",
   description:
     "EEE-led supplier of PLC, motors, drives, sensors, and industrial spare parts with technical service across Bangladesh.",
@@ -71,9 +72,33 @@ export const fallbackSettings: ISiteSettings = {
   addressHouse: OFFICIAL_CONTACT.addressHouse,
   addressRoad: OFFICIAL_CONTACT.addressRoad,
   addressBlock: OFFICIAL_CONTACT.addressBlock,
+  addressCity: "Mirpur-1, Dhaka-1216, Bangladesh",
   hours: "Sat–Thu 9:00–18:00",
+  workingDays: "Saturday – Thursday",
+  mapShareUrl: "",
   mapEmbedUrl:
-    "https://maps.google.com/maps?q=Dhaka%2C%20Bangladesh&t=&z=13&ie=UTF8&iwloc=&output=embed",
+    "https://maps.google.com/maps?q=House%2043-44%2C%20Road-1%2C%20Block-B%2C%20Mirpur-1%2C%20Dhaka-1216&t=&z=15&ie=UTF8&iwloc=&output=embed",
+  mapZoom: 15,
+  contactPage: {
+    heading: "Send a part number or photo",
+    description: "We reply with options, stock and pricing. Same desk for products and technical service.",
+    phoneLabel: "Phone",
+    emailLabel: "Email",
+    addressLabel: "Address",
+    hoursLabel: "Hours",
+    formHeading: "",
+    nameLabel: "Name",
+    emailFieldLabel: "Email",
+    phoneFieldLabel: "Phone",
+    companyLabel: "Company / Workshop",
+    inquiryTypeLabel: "Inquiry type",
+    inquiryOptions: ["Product quote", "Parts sourcing", "Technical service", "Other"],
+    subjectLabel: "Subject",
+    messageLabel: "Message",
+    submitButtonText: "Send inquiry",
+    successMessage: "Message received. We will reply shortly.",
+    errorMessage: "Failed to send message. Please try again.",
+  },
   logoUrl: "",
   footerLogoUrl: "",
   favicon: "",
@@ -192,9 +217,15 @@ export async function getSettings(): Promise<ISiteSettings> {
       ? "NUR SHOP BD"
       : rawBrandName || fallbackSettings.brandName;
 
+  const rawContactPage = {
+    ...fallbackSettings.contactPage,
+    ...((doc?.contactPage as Record<string, unknown>) || {}),
+  };
+
   return {
     _id: (merged._id as string) || "site-settings",
     brandName,
+    companyName: (merged.companyName as string) || brandName,
     tagline: (merged.tagline as string) || fallbackSettings.tagline,
     description: (merged.description as string) || fallbackSettings.description,
     email: officialOrExisting(merged.email as string, fallbackSettings.email),
@@ -215,8 +246,34 @@ export async function getSettings(): Promise<ISiteSettings> {
       merged.addressBlock as string,
       fallbackSettings.addressBlock || ""
     ),
+    addressCity: (merged.addressCity as string) || fallbackSettings.addressCity || "",
     hours: (merged.hours as string) || fallbackSettings.hours,
+    workingDays: (merged.workingDays as string) || fallbackSettings.workingDays || "Saturday – Thursday",
+    mapShareUrl: (merged.mapShareUrl as string) || "",
     mapEmbedUrl: (merged.mapEmbedUrl as string) || fallbackSettings.mapEmbedUrl,
+    mapZoom: typeof merged.mapZoom === "number" && !isNaN(merged.mapZoom) ? merged.mapZoom : 15,
+    contactPage: {
+      heading: (rawContactPage.heading as string) || fallbackSettings.contactPage?.heading || "Send a part number or photo",
+      description: (rawContactPage.description as string) || fallbackSettings.contactPage?.description || "We reply with options, stock and pricing. Same desk for products and technical service.",
+      phoneLabel: (rawContactPage.phoneLabel as string) || "Phone",
+      emailLabel: (rawContactPage.emailLabel as string) || "Email",
+      addressLabel: (rawContactPage.addressLabel as string) || "Address",
+      hoursLabel: (rawContactPage.hoursLabel as string) || "Hours",
+      formHeading: (rawContactPage.formHeading as string) || "",
+      nameLabel: (rawContactPage.nameLabel as string) || "Name",
+      emailFieldLabel: (rawContactPage.emailFieldLabel as string) || "Email",
+      phoneFieldLabel: (rawContactPage.phoneFieldLabel as string) || "Phone",
+      companyLabel: (rawContactPage.companyLabel as string) || "Company / Workshop",
+      inquiryTypeLabel: (rawContactPage.inquiryTypeLabel as string) || "Inquiry type",
+      inquiryOptions: Array.isArray(rawContactPage.inquiryOptions) && rawContactPage.inquiryOptions.length
+        ? (rawContactPage.inquiryOptions as string[])
+        : (fallbackSettings.contactPage?.inquiryOptions || ["Product quote", "Parts sourcing", "Technical service", "Other"]),
+      subjectLabel: (rawContactPage.subjectLabel as string) || "Subject",
+      messageLabel: (rawContactPage.messageLabel as string) || "Message",
+      submitButtonText: (rawContactPage.submitButtonText as string) || "Send inquiry",
+      successMessage: (rawContactPage.successMessage as string) || "Message received. We will reply shortly.",
+      errorMessage: (rawContactPage.errorMessage as string) || "Failed to send message. Please try again.",
+    },
     logoUrl: ((merged.logoUrl || merged.logo) as string) || "",
     footerLogoUrl: (merged.footerLogoUrl as string) || "",
     favicon: (merged.favicon as string) || "",

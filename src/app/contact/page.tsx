@@ -19,7 +19,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
     site,
     title: "Contact",
-    description: "Request a quote for machine parts or technical service.",
+    description: site.contactPage?.description || "Request a quote for machine parts or technical service.",
     path: "/contact",
   });
 }
@@ -43,20 +43,31 @@ export default async function ContactPage({
       ? `Service: ${service.title}`
       : sp.subject;
 
+  const cp = settings.contactPage;
+  const heading = cp?.heading || "Send a part number or photo";
+  const description =
+    cp?.description ||
+    "We reply with options, stock and pricing. Same desk for products and technical service.";
+  const phoneLabel = cp?.phoneLabel || "Phone";
+  const emailLabel = cp?.emailLabel || "Email";
+  const addressLabel = cp?.addressLabel || "Address";
+  const hoursLabel = cp?.hoursLabel || "Hours";
+  const companyName = settings.companyName || settings.brandName || "NUR SHOP BD";
+
   return (
     <CatalogShell categories={categories} showSearch={false}>
       <div className="section-label">Contact</div>
       <div className="grid gap-4 lg:grid-cols-[0.95fr_1.05fr] lg:items-stretch">
         <div className="flex h-full flex-col border border-line bg-navy p-3.5 text-white sm:p-5">
           <h1 className="text-xl sm:text-2xl md:text-[1.75rem] font-semibold tracking-normal leading-snug">
-            Send a part number or photo
+            {heading}
           </h1>
           <p className="mt-1.5 text-sm leading-5 text-white/70">
-            We reply with options, stock and pricing. Same desk for products and
-            technical service.
+            {description}
           </p>
           <div className="mt-4 flex min-h-0 flex-1 flex-col gap-4 min-[480px]:flex-row min-[480px]:items-stretch">
             <dl className="flex min-w-0 flex-1 flex-col justify-between gap-3">
+              {/* Phone */}
               <div className="flex items-start gap-3">
                 <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-orange-bright text-white">
                   <svg className="h-[15px] w-[15px] fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
@@ -64,7 +75,7 @@ export default async function ContactPage({
                   </svg>
                 </span>
                 <div className="min-w-0">
-                  <dt className="text-[10.5px] font-semibold uppercase tracking-wider text-orange-bright">Phone</dt>
+                  <dt className="text-[10.5px] font-semibold uppercase tracking-wider text-orange-bright">{phoneLabel}</dt>
                   <dd className="mt-1 space-y-0.5 text-[15px] sm:text-base font-medium leading-snug">
                     <div><a href={`tel:${settings.phone}`}>{settings.phone}</a></div>
                     {settings.phone2 ? (
@@ -76,6 +87,8 @@ export default async function ContactPage({
                   </dd>
                 </div>
               </div>
+
+              {/* Email */}
               <div className="flex items-start gap-3">
                 <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-orange-bright text-white">
                   <svg className="h-[15px] w-[15px] fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
@@ -84,12 +97,14 @@ export default async function ContactPage({
                   </svg>
                 </span>
                 <div className="min-w-0">
-                  <dt className="text-[10.5px] font-semibold uppercase tracking-wider text-orange-bright">Email</dt>
+                  <dt className="text-[10.5px] font-semibold uppercase tracking-wider text-orange-bright">{emailLabel}</dt>
                   <dd className="mt-1 break-words text-[15px] sm:text-[17px] font-medium leading-snug">
                     <a href={`mailto:${settings.email}`}>{settings.email}</a>
                   </dd>
                 </div>
               </div>
+
+              {/* Address */}
               <div className="flex items-start gap-3">
                 <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-orange-bright text-white">
                   <svg className="h-[15px] w-[15px] fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
@@ -98,16 +113,19 @@ export default async function ContactPage({
                   </svg>
                 </span>
                 <div className="min-w-0">
-                  <dt className="text-[10.5px] font-semibold uppercase tracking-wider text-orange-bright">Address</dt>
+                  <dt className="text-[10.5px] font-semibold uppercase tracking-wider text-orange-bright">{addressLabel}</dt>
                   <dd className="mt-1 text-[15px] sm:text-base leading-snug text-white/95">
-                    <div className="font-semibold">{settings.brandName}</div>
+                    <div className="font-semibold">{companyName}</div>
                     {settings.addressHouse ? <div>House {settings.addressHouse}</div> : null}
                     {settings.addressRoad ? <div>Road {settings.addressRoad}</div> : null}
                     {settings.addressBlock ? <div>Block {settings.addressBlock}</div> : null}
-                    <div>{settings.address}</div>
+                    {settings.address ? <div>{settings.address}</div> : null}
+                    {settings.addressCity ? <div className="text-white/80 text-[13.5px]">{settings.addressCity}</div> : null}
                   </dd>
                 </div>
               </div>
+
+              {/* Hours */}
               <div className="flex items-start gap-3">
                 <span className="mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-orange-bright text-white">
                   <svg className="h-[15px] w-[15px] fill-none stroke-current" viewBox="0 0 24 24" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
@@ -116,8 +134,13 @@ export default async function ContactPage({
                   </svg>
                 </span>
                 <div className="min-w-0">
-                  <dt className="text-[10.5px] font-semibold uppercase tracking-wider text-orange-bright">Hours</dt>
-                  <dd className="mt-1 text-[15px] sm:text-base font-medium">{settings.hours}</dd>
+                  <dt className="text-[10.5px] font-semibold uppercase tracking-wider text-orange-bright">{hoursLabel}</dt>
+                  <dd className="mt-1 text-[15px] sm:text-base font-medium">
+                    <div>{settings.hours}</div>
+                    {settings.workingDays ? (
+                      <div className="text-xs text-white/75 font-normal">{settings.workingDays}</div>
+                    ) : null}
+                  </dd>
                 </div>
               </div>
             </dl>
@@ -168,6 +191,7 @@ export default async function ContactPage({
             defaultSubject={subject}
             productId={product ? String(product._id) : undefined}
             serviceId={service ? String(service._id) : undefined}
+            content={settings.contactPage}
           />
         </div>
       </div>
