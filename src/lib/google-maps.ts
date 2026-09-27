@@ -49,12 +49,33 @@ export function isGoogleMapsShortLink(url: string): boolean {
   }
 }
 
+export function isGenericLocation(query?: string): boolean {
+  if (!query) return true;
+  const q = decodeURIComponent(query).trim().toLowerCase();
+  return (
+    q === "dhaka" ||
+    q === "dhaka, bangladesh" ||
+    q === "dhaka,bangladesh" ||
+    q === "dhaka bangladesh" ||
+    q === "bangladesh" ||
+    q === "dhaka%2c%20bangladesh" ||
+    q === "dhaka%2c bangladesh"
+  );
+}
+
+/**
+ * Default official company location query with name and coordinates
+ */
+export const DEFAULT_COMPANY_MAP_QUERY =
+  "Nur Engineering Solution, House 43-44, Road-1, Block-B, Mirpur-1, Dhaka-1216, Bangladesh";
+
 /**
  * Builds standard Google Maps embed URL
  */
-export function buildEmbedUrl(query: string, zoom: number = 15): string {
-  const cleanQuery = encodeURIComponent(query.trim());
-  const safeZoom = Math.min(Math.max(Number(zoom) || 15, 1), 21);
+export function buildEmbedUrl(query: string, zoom: number = 16): string {
+  const effectiveQuery = isGenericLocation(query) ? DEFAULT_COMPANY_MAP_QUERY : query;
+  const cleanQuery = encodeURIComponent(effectiveQuery.trim());
+  const safeZoom = Math.min(Math.max(Number(zoom) || 16, 1), 21);
   return `https://maps.google.com/maps?q=${cleanQuery}&t=&z=${safeZoom}&ie=UTF8&iwloc=&output=embed`;
 }
 
@@ -163,6 +184,20 @@ export function resolveMapInputSync(
 
   // If it's already an embed URL with embed?pb= (Google Maps embed iframe API)
   if (trimmed.includes("google.com/maps/embed") && (trimmed.includes("pb=") || trimmed.includes("q="))) {
+    if (trimmed.includes("q=")) {
+      const u = new URL(trimmed.startsWith("http") ? trimmed : `https://${trimmed}`);
+      const q = u.searchParams.get("q");
+      if (isGenericLocation(q || "")) {
+        const specificQuery = fallbackAddress || DEFAULT_COMPANY_MAP_QUERY;
+        return {
+          originalInput: trimmed,
+          embedUrl: buildEmbedUrl(specificQuery, defaultZoom || 16),
+          extractedQuery: specificQuery,
+          zoom: defaultZoom || 16,
+          isValid: true,
+        };
+      }
+    }
     return {
       originalInput: trimmed,
       embedUrl: trimmed,
@@ -173,12 +208,13 @@ export function resolveMapInputSync(
 
   // If it's a short link, mark it as short link (client needs server to resolve)
   if (isGoogleMapsShortLink(trimmed)) {
+    const specificQuery = fallbackAddress || DEFAULT_COMPANY_MAP_QUERY;
     return {
       originalInput: trimmed,
-      embedUrl: buildEmbedUrl(fallbackAddress || "Mirpur-1, Dhaka, Bangladesh", defaultZoom),
+      embedUrl: buildEmbedUrl(specificQuery, defaultZoom || 16),
       shareUrl: trimmed,
       isShortlink: true,
-      zoom: defaultZoom,
+      zoom: defaultZoom || 16,
       isValid: true,
     };
   }
@@ -186,24 +222,28 @@ export function resolveMapInputSync(
   // Try extracting place or coordinates from standard Google Maps URL
   const extracted = extractQueryFromGoogleMapsUrl(trimmed);
   if (extracted && extracted.query) {
-    const zoom = extracted.zoom || defaultZoom;
+    const isGeneric = isGenericLocation(extracted.query);
+    const queryToUse = isGeneric ? (fallbackAddress || DEFAULT_COMPANY_MAP_QUERY) : extracted.query;
+    const zoom = isGeneric ? 16 : (extracted.zoom || defaultZoom || 16);
     return {
       originalInput: trimmed,
-      embedUrl: buildEmbedUrl(extracted.query, zoom),
+      embedUrl: buildEmbedUrl(queryToUse, zoom),
       shareUrl: trimmed,
       zoom,
-      extractedQuery: extracted.query,
+      extractedQuery: queryToUse,
       isValid: true,
     };
   }
 
   // If it looks like a general address or query string (e.g. "House 43, Mirpur 1, Dhaka")
   if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
+    const isGeneric = isGenericLocation(trimmed);
+    const queryToUse = isGeneric ? (fallbackAddress || DEFAULT_COMPANY_MAP_QUERY) : trimmed;
     return {
       originalInput: trimmed,
-      embedUrl: buildEmbedUrl(trimmed, defaultZoom),
-      extractedQuery: trimmed,
-      zoom: defaultZoom,
+      embedUrl: buildEmbedUrl(queryToUse, defaultZoom || 16),
+      extractedQuery: queryToUse,
+      zoom: defaultZoom || 16,
       isValid: true,
     };
   }

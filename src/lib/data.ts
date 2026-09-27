@@ -77,8 +77,8 @@ export const fallbackSettings: ISiteSettings = {
   workingDays: "Saturday – Thursday",
   mapShareUrl: "",
   mapEmbedUrl:
-    "https://maps.google.com/maps?q=House%2043-44%2C%20Road-1%2C%20Block-B%2C%20Mirpur-1%2C%20Dhaka-1216&t=&z=15&ie=UTF8&iwloc=&output=embed",
-  mapZoom: 15,
+    "https://maps.google.com/maps?q=Nur%20Engineering%20Solution%2C%20House%2043-44%2C%20Road-1%2C%20Block-B%2C%20Mirpur-1%2C%20Dhaka-1216%2C%20Bangladesh&t=&z=16&ie=UTF8&iwloc=&output=embed",
+  mapZoom: 16,
   contactPage: {
     heading: "Send a part number or photo",
     description: "We reply with options, stock and pricing. Same desk for products and technical service.",
@@ -250,8 +250,14 @@ export async function getSettings(): Promise<ISiteSettings> {
     hours: (merged.hours as string) || fallbackSettings.hours,
     workingDays: (merged.workingDays as string) || fallbackSettings.workingDays || "Saturday – Thursday",
     mapShareUrl: (merged.mapShareUrl as string) || "",
-    mapEmbedUrl: (merged.mapEmbedUrl as string) || fallbackSettings.mapEmbedUrl,
-    mapZoom: typeof merged.mapZoom === "number" && !isNaN(merged.mapZoom) ? merged.mapZoom : 15,
+    mapEmbedUrl:
+      !(merged.mapEmbedUrl as string) ||
+      (merged.mapEmbedUrl as string).includes("q=Dhaka%2C%20Bangladesh") ||
+      (merged.mapEmbedUrl as string).includes("q=Dhaka&") ||
+      (merged.mapEmbedUrl as string).includes("q=Dhaka%2C+Bangladesh")
+        ? fallbackSettings.mapEmbedUrl
+        : (merged.mapEmbedUrl as string),
+    mapZoom: typeof merged.mapZoom === "number" && !isNaN(merged.mapZoom) ? merged.mapZoom : 16,
     contactPage: {
       heading: (rawContactPage.heading as string) || fallbackSettings.contactPage?.heading || "Send a part number or photo",
       description: (rawContactPage.description as string) || fallbackSettings.contactPage?.description || "We reply with options, stock and pricing. Same desk for products and technical service.",

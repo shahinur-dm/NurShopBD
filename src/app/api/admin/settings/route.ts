@@ -95,8 +95,9 @@ export async function PUT(req: Request) {
 
       // If user provided a mapShareUrl or mapEmbedUrl, make sure mapEmbedUrl is a valid embed URL
       const candidateMap = (settings.mapShareUrl || settings.mapEmbedUrl || "").trim();
-      const zoom = Number(settings.mapZoom) || 15;
+      const zoom = Number(settings.mapZoom) || 16;
       const fullAddress = [
+        settings.companyName || settings.brandName || "Nur Engineering Solution",
         settings.addressHouse ? `House ${settings.addressHouse}` : "",
         settings.addressRoad ? `Road ${settings.addressRoad}` : "",
         settings.addressBlock ? `Block ${settings.addressBlock}` : "",

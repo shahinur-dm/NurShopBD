@@ -295,6 +295,7 @@ function AdminSettingsContent() {
   async function handleResolveMapLink(inputUrl?: string) {
     const raw = (inputUrl !== undefined ? inputUrl : (mapsEmbed || mapShareUrl)).trim();
     const fullAddress = [
+      companyName || brandName || "Nur Engineering Solution",
       addressHouse ? `House ${addressHouse}` : "",
       addressRoad ? `Road ${addressRoad}` : "",
       addressBlock ? `Block ${addressBlock}` : "",
@@ -356,6 +357,7 @@ function AdminSettingsContent() {
 
   function handleSyncAddressToMap() {
     const fullAddress = [
+      companyName || brandName || "Nur Engineering Solution",
       addressHouse ? `House ${addressHouse}` : "",
       addressRoad ? `Road ${addressRoad}` : "",
       addressBlock ? `Block ${addressBlock}` : "",
@@ -522,6 +524,7 @@ function AdminSettingsContent() {
   const previewMapSrc = resolveMapInputSync(
     mapsEmbed || mapShareUrl,
     [
+      companyName || brandName || "Nur Engineering Solution",
       addressHouse ? `House ${addressHouse}` : "",
       addressRoad ? `Road ${addressRoad}` : "",
       addressBlock ? `Block ${addressBlock}` : "",
@@ -529,7 +532,7 @@ function AdminSettingsContent() {
       addressCity || "",
     ]
       .filter(Boolean)
-      .join(", ") || "Mirpur-1, Dhaka, Bangladesh",
+      .join(", ") || "Nur Engineering Solution, House#43-44, Road-1, Block -B, Mirpur-1, Dhaka-1216, Bangladesh",
     mapZoom
   ).embedUrl;
 
