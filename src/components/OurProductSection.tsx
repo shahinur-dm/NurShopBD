@@ -152,7 +152,20 @@ export function OurProductSection({
             ) : (
               <span className="inline-flex items-center justify-center gap-1.5">
                 <span>VIEW MORE PRODUCT</span>
-                <span className="inline-flex items-center justify-center leading-none text-[18px] sm:text-[19px] font-sans">→</span>
+                <span className="inline-flex items-center justify-center shrink-0">
+                  <svg
+                    className="h-4 w-4 sm:h-[18px] sm:w-[18px] shrink-0"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M5 12h14M13 6l6 6-6 6" />
+                  </svg>
+                </span>
               </span>
             )}
           </button>

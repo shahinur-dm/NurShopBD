@@ -52,7 +52,20 @@ export function Pagination({
             onClick={() => onPageChange(currentPage - 1)}
             className="h-7 sm:h-8 px-2.5 sm:px-3 inline-flex items-center justify-center gap-1.5 text-[11px] sm:text-[12px] font-bold uppercase tracking-wider border border-line bg-white text-navy hover:border-orange hover:text-orange transition rounded-[2px] disabled:opacity-50 cursor-pointer"
           >
-            <span className="inline-flex items-center justify-center leading-none text-[17px] sm:text-[18px] font-sans">←</span>
+            <span className="inline-flex items-center justify-center shrink-0">
+              <svg
+                className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M19 12H5M11 18l-6-6 6-6" />
+              </svg>
+            </span>
             <span>PREV</span>
           </button>
         ) : (
@@ -60,7 +73,20 @@ export function Pagination({
             href={createPageUrl(currentPage - 1)}
             className="h-7 sm:h-8 px-2.5 sm:px-3 inline-flex items-center justify-center gap-1.5 text-[11px] sm:text-[12px] font-bold uppercase tracking-wider border border-line bg-white text-navy hover:border-orange hover:text-orange transition rounded-[2px]"
           >
-            <span className="inline-flex items-center justify-center leading-none text-[17px] sm:text-[18px] font-sans">←</span>
+            <span className="inline-flex items-center justify-center shrink-0">
+              <svg
+                className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M19 12H5M11 18l-6-6 6-6" />
+              </svg>
+            </span>
             <span>PREV</span>
           </Link>
         ))}
@@ -105,7 +131,20 @@ export function Pagination({
             className="h-7 sm:h-8 px-2.5 sm:px-3 inline-flex items-center justify-center gap-1.5 text-[11px] sm:text-[12px] font-bold uppercase tracking-wider border border-line bg-white text-navy hover:border-orange hover:text-orange transition rounded-[2px] disabled:opacity-50 cursor-pointer"
           >
             <span>NEXT</span>
-            <span className="inline-flex items-center justify-center leading-none text-[17px] sm:text-[18px] font-sans">→</span>
+            <span className="inline-flex items-center justify-center shrink-0">
+              <svg
+                className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </span>
           </button>
         ) : (
           <Link
@@ -113,7 +152,20 @@ export function Pagination({
             className="h-7 sm:h-8 px-2.5 sm:px-3 inline-flex items-center justify-center gap-1.5 text-[11px] sm:text-[12px] font-bold uppercase tracking-wider border border-line bg-white text-navy hover:border-orange hover:text-orange transition rounded-[2px]"
           >
             <span>NEXT</span>
-            <span className="inline-flex items-center justify-center leading-none text-[17px] sm:text-[18px] font-sans">→</span>
+            <span className="inline-flex items-center justify-center shrink-0">
+              <svg
+                className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </span>
           </Link>
         ))}
     </nav>
