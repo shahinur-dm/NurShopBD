@@ -88,14 +88,21 @@ export function ProductCard({
           <p className="kicker text-[10px] sm:text-[11px] truncate text-orange font-bold uppercase tracking-wider">
             {category || "Industrial Machine Parts"}
           </p>
-          <h3
-            className={`mt-1 font-medium normal-case leading-[1.35] tracking-normal text-navy transition group-hover:text-orange line-clamp-2 min-h-[2.6em] ${
-              size === "sm" ? "text-[12.5px] sm:text-[13.5px]" : "text-[13.5px] sm:text-[14.5px]"
-            }`}
-            title={product.name}
-          >
-            {displayProductName(product.name)}
-          </h3>
+          <div className="mt-1 flex items-start justify-between gap-1.5 min-h-[2.6em]">
+            <h3
+              className={`font-medium normal-case leading-[1.35] tracking-normal text-navy transition group-hover:text-orange line-clamp-2 flex-1 min-w-0 ${
+                size === "sm" ? "text-[12.5px] sm:text-[13.5px]" : "text-[13.5px] sm:text-[14.5px]"
+              }`}
+              title={product.name}
+            >
+              {displayProductName(product.name)}
+            </h3>
+            {product.price !== undefined && product.price !== null && !isNaN(Number(product.price)) && Number(product.price) > 0 ? (
+              <span className="shrink-0 font-display text-[15px] sm:text-[16.5px] font-extrabold text-navy tracking-tight text-right whitespace-nowrap leading-tight">
+                ৳ {Math.round(Number(product.price)).toLocaleString("en-US")}
+              </span>
+            ) : null}
+          </div>
           {size !== "sm" && product.shortDescription && (
             <p className="mt-1 hidden sm:line-clamp-2 text-[11.5px] leading-relaxed text-steel">
               {product.shortDescription}
@@ -103,21 +110,21 @@ export function ProductCard({
           )}
         </Link>
 
-        {/* 3. Action Buttons: ASK PRICE (Orange) & VIEW DETAILS (Green) */}
+        {/* 3. Action Buttons: ASK UPDATED PRICE (Orange) & VIEW DETAILS (Green) */}
         <div className="pt-2 sm:pt-2.5 border-t border-line mt-auto flex items-center gap-1.5 sm:gap-2 min-w-0">
-          {/* ASK PRICE (Orange) */}
+          {/* ASK UPDATED PRICE (Orange) */}
           <Link
             href={`/contact?product=${product.slug}`}
-            className="flex-1 min-w-0 inline-flex items-center justify-center bg-orange font-display font-bold uppercase text-white transition hover:bg-[#e05300] active:scale-95 shadow-2xs h-8 sm:h-9 px-1.5 sm:px-2 text-[12.5px] sm:text-[14px] tracking-[0.04em] rounded-[2px] text-center leading-none"
-            title={`Ask price for ${product.name}`}
+            className="flex-1 min-w-0 inline-flex items-center justify-center bg-orange font-display font-bold uppercase text-white transition hover:bg-[#e05300] active:scale-95 shadow-2xs h-8 sm:h-9 px-1.5 sm:px-2 text-[11px] sm:text-[12.5px] tracking-[0.02em] rounded-[2px] text-center leading-none"
+            title={`Ask updated price for ${product.name}`}
           >
-            <span className="whitespace-nowrap">ASK PRICE</span>
+            <span className="whitespace-nowrap">ASK UPDATED PRICE</span>
           </Link>
 
           {/* VIEW DETAILS (Green) */}
           <Link
             href={`/products/${product.slug}`}
-            className="flex-1 min-w-0 inline-flex items-center justify-center bg-[#16a34a] font-display font-bold uppercase text-white transition hover:bg-[#15803d] active:scale-95 shadow-2xs h-8 sm:h-9 px-1.5 sm:px-2 text-[12.5px] sm:text-[14px] tracking-[0.04em] rounded-[2px] text-center leading-none"
+            className="flex-1 min-w-0 inline-flex items-center justify-center bg-[#16a34a] font-display font-bold uppercase text-white transition hover:bg-[#15803d] active:scale-95 shadow-2xs h-8 sm:h-9 px-1.5 sm:px-2 text-[11px] sm:text-[12.5px] tracking-[0.02em] rounded-[2px] text-center leading-none"
             title={`View details for ${product.name}`}
           >
             <span className="whitespace-nowrap">VIEW DETAILS</span>

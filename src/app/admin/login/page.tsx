@@ -51,7 +51,7 @@ export default function AdminLoginPage() {
             NES
           </div>
           <h1 className="mt-4 font-display text-xl font-bold uppercase tracking-wider text-white">
-            Nur Engineering CMS
+            NUR SHOP CMS
           </h1>
           <p className="mt-1 text-xs text-white/60">
             Administrative Access & Website Management

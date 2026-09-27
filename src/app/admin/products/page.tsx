@@ -210,6 +210,7 @@ export default function AdminProductsPage() {
               <tr>
                 <th className="py-3 px-4">Product</th>
                 <th className="py-3 px-4">Category</th>
+                <th className="py-3 px-4">Price</th>
                 <th className="py-3 px-4">Brand / SKU</th>
                 <th className="py-3 px-4">Availability</th>
                 <th className="py-3 px-4">Status</th>
@@ -219,13 +220,13 @@ export default function AdminProductsPage() {
             <tbody className="divide-y divide-line/60">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-mist">
+                  <td colSpan={7} className="py-12 text-center text-mist">
                     Loading products...
                   </td>
                 </tr>
               ) : products.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center">
+                  <td colSpan={7} className="py-12 text-center">
                     <p className="text-sm font-bold text-navy">No products found</p>
                     <p className="mt-1 text-xs text-mist">Try adjusting your search or filters.</p>
                   </td>
@@ -255,6 +256,13 @@ export default function AdminProductsPage() {
                     {/* Category */}
                     <td className="py-3 px-4 font-medium text-navy">
                       {p.category?.name || "—"}
+                    </td>
+
+                    {/* Price */}
+                    <td className="py-3 px-4 font-bold text-navy whitespace-nowrap">
+                      {p.price !== undefined && p.price !== null && !isNaN(Number(p.price))
+                        ? `৳ ${Math.round(Number(p.price)).toLocaleString("en-US")}`
+                        : "—"}
                     </td>
 
                     {/* Brand / SKU */}

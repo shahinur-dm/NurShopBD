@@ -59,7 +59,7 @@ export interface ISiteSettings {
 
 const SiteSettingsSchema = new Schema<ISiteSettings>(
   {
-    brandName: { type: String, default: "Nur Engineering Solution" },
+    brandName: { type: String, default: "NUR SHOP" },
     tagline: { type: String, default: "Machine, spare parts and Technical service provider" },
     description: {
       type: String,
@@ -123,7 +123,7 @@ const SiteSettingsSchema = new Schema<ISiteSettings>(
     seo: {
       defaultTitle: {
         type: String,
-        default: "Nur Engineering Solution | Machine Parts & Technical Service",
+        default: "NUR SHOP | Machine Parts & Technical Service",
       },
       defaultDescription: {
         type: String,

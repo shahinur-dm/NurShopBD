@@ -58,7 +58,7 @@ export { defaultFooterQuickLinks, defaultFooterServices };
 
 export const fallbackSettings: ISiteSettings = {
   _id: "fallback",
-  brandName: "Nur Engineering Solution",
+  brandName: "NUR SHOP",
   tagline: "Machine, spare parts and Technical service provider",
   description:
     "EEE-led supplier of PLC, motors, drives, sensors, and industrial spare parts with technical service across Bangladesh.",
@@ -104,7 +104,7 @@ export const fallbackSettings: ISiteSettings = {
   },
   seo: {
     defaultTitle:
-      "Nur Engineering Solution | Machine Parts & Technical Service",
+      "NUR SHOP | Machine Parts & Technical Service",
     defaultDescription:
       "Buy PLC, motors, VFD, sensors, contactors and industrial spare parts. Technical service from an EEE engineering desk in Bangladesh.",
     keywords: [
@@ -184,9 +184,15 @@ export async function getSettings(): Promise<ISiteSettings> {
     ...((doc?.analytics as Record<string, string>) || {}),
   };
 
+  const rawBrandName = (merged.brandName as string) || fallbackSettings.brandName;
+  const brandName =
+    rawBrandName && /nur\s*engineering(\s*solution)?/i.test(rawBrandName.trim())
+      ? "NUR SHOP"
+      : rawBrandName || fallbackSettings.brandName;
+
   return {
     _id: (merged._id as string) || "site-settings",
-    brandName: (merged.brandName as string) || fallbackSettings.brandName,
+    brandName,
     tagline: (merged.tagline as string) || fallbackSettings.tagline,
     description: (merged.description as string) || fallbackSettings.description,
     email: officialOrExisting(merged.email as string, fallbackSettings.email),
@@ -280,10 +286,10 @@ export async function getSettings(): Promise<ISiteSettings> {
 
 export const fallbackCompanyProfile: ICompanyProfile = {
   _id: "company-profile",
-  name: "Nur Engineering Solution",
+  name: "NUR SHOP",
   tagline: "Machine, spare parts and Technical service provider",
   about:
-    "Nur Engineering Solution is a Bangladesh-based machine parts and technical service desk founded by an Electrical and Electronic Engineering student. We sell PLC, motors, drives, sensors, contactors and workshop spare parts — and we help you pick the right substitute when the original part is gone.",
+    "NUR SHOP is a Bangladesh-based machine parts and technical service desk founded by an Electrical and Electronic Engineering student. We sell PLC, motors, drives, sensors, contactors and workshop spare parts — and we help you pick the right substitute when the original part is gone.",
   mission:
     "Supply accurate industrial parts with honest specs, clear prices, and EEE-backed selection help.",
   vision:
@@ -318,9 +324,16 @@ export async function getCompany(): Promise<ICompanyProfile> {
     return fallbackCompanyProfile;
   }
 
+  const rawCompanyName = doc.name || fallbackCompanyProfile.name;
+  const companyName =
+    rawCompanyName && /nur\s*engineering(\s*solution)?/i.test(rawCompanyName.trim())
+      ? "NUR SHOP"
+      : rawCompanyName;
+
   return {
     ...fallbackCompanyProfile,
     ...doc,
+    name: companyName,
     aboutLabel: doc.aboutLabel || fallbackCompanyProfile.aboutLabel,
     highlights:
       Array.isArray(doc.highlights) && doc.highlights.length > 0

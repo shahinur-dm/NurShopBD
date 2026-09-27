@@ -29,7 +29,7 @@ export function ProductTabs({
 
   const defaultWarrantyText =
     warrantyAndReturns ||
-    `All genuine products supplied by Nur Engineering Solution come with standard manufacturer warranty support. 
+    `All genuine products supplied by NUR SHOP come with standard manufacturer warranty support. 
 In the event of verified factory defects or incorrect part delivery, replacement is provided within standard lead time. 
 Physical damage, electrical overload, or incorrect installation is not covered under warranty.`;
 

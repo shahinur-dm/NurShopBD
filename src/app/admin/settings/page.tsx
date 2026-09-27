@@ -31,7 +31,7 @@ function AdminSettingsContent() {
   >("logo");
 
   // Settings state across all tabs
-  const [brandName, setBrandName] = useState("Nur Engineering Solution");
+  const [brandName, setBrandName] = useState("NUR SHOP");
   const [tagline, setTagline] = useState("Machine, spare parts and Technical service provider");
   const [description, setDescription] = useState("");
   const [logo, setLogo] = useState("");
@@ -86,7 +86,7 @@ function AdminSettingsContent() {
   }>({});
 
   // SEO & Analytics state
-  const [seoTitle, setSeoTitle] = useState("Nur Engineering Solution | Machine Parts & Technical Service");
+  const [seoTitle, setSeoTitle] = useState("NUR SHOP | Machine Parts & Technical Service");
   const [seoDescription, setSeoDescription] = useState("");
   const [seoKeywords, setSeoKeywords] = useState("PLC Bangladesh, machine parts, VFD, motors, sensors, EEE spare parts");
   const [gaMeasurementId, setGaMeasurementId] = useState("");
@@ -1018,7 +1018,7 @@ function AdminSettingsContent() {
                     type="text"
                     value={brandName}
                     onChange={(e) => setBrandName(e.target.value)}
-                    placeholder="Nur Engineering Solution"
+                    placeholder="NUR SHOP"
                     className="mt-1 w-full rounded border border-line px-3 py-2 text-xs outline-none focus:border-orange font-bold text-navy"
                   />
                 </div>

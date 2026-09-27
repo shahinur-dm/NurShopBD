@@ -18,7 +18,7 @@ export type UseCaseContent = {
 };
 
 /**
- * Application notes for Nur Engineering Solution.
+ * Application notes for NUR SHOP.
  * Written as practical EEE desk guidance for Bangladesh SMEs — not fabricated client ROI.
  * Industry figures (VFD energy range, typical machine topologies) come from
  * published automation practice in textile/RMG, packaging, pumps/fans, and panel work.

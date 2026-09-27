@@ -19,7 +19,7 @@ export default function AdminAboutPage() {
 
   // Form states
   const [aboutLabel, setAboutLabel] = useState("About");
-  const [name, setName] = useState("Nur Engineering Solution");
+  const [name, setName] = useState("NUR SHOP");
   const [tagline, setTagline] = useState("Machine, spare parts and Technical service provider");
   const [about, setAbout] = useState("");
   const [coverImage, setCoverImage] = useState("");
@@ -215,7 +215,7 @@ export default function AdminAboutPage() {
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. NUR ENGINEERING SOLUTION"
+                placeholder="e.g. NUR SHOP"
                 className="mt-1 w-full rounded border border-line px-3 py-2 text-xs outline-none focus:border-orange font-medium"
               />
               <p className="mt-1 text-[11px] text-mist">
@@ -291,7 +291,7 @@ export default function AdminAboutPage() {
               rows={6}
               value={about}
               onChange={(e) => setAbout(e.target.value)}
-              placeholder="Enter comprehensive description about Nur Engineering Solution..."
+              placeholder="Enter comprehensive description about NUR SHOP..."
               className="mt-1 w-full rounded border border-line px-3 py-2 text-xs outline-none focus:border-orange leading-relaxed"
             />
             <p className="mt-1 text-[11px] text-mist">

@@ -20,7 +20,7 @@ export function Logo({
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}
-        alt="Nur Engineering Solution Logo"
+        alt="NUR SHOP Logo"
         className="h-full w-full object-contain"
       />
     </span>
@@ -43,7 +43,7 @@ export function Logo({
 
   if (asLink) {
     return (
-      <Link href="/" aria-label="Nur Engineering Solution home" className="inline-block">
+      <Link href="/" aria-label="NUR SHOP home" className="inline-block">
         {badge}
       </Link>
     );

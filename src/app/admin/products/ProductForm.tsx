@@ -323,8 +323,11 @@ export function ProductForm({ initialData, isEdit }: ProductFormProps) {
         subCategory: subCategory || null,
         shortDescription,
         description,
-        price: price ? parseFloat(price) : undefined,
-        currency,
+        price:
+          price !== "" && !isNaN(Number(price)) && Number(price) >= 0
+            ? Number(price)
+            : undefined,
+        currency: currency || "BDT",
         image,
         gallery,
         videoUrl: videoUrl.trim() || undefined,
@@ -1179,10 +1182,12 @@ export function ProductForm({ initialData, isEdit }: ProductFormProps) {
                 <label className="block text-xs font-bold uppercase text-navy">Price (BDT)</label>
                 <input
                   type="number"
+                  min="0"
+                  step="any"
                   placeholder="e.g. 18500"
                   value={price}
                   onChange={(e) => setPrice(e.target.value)}
-                  className="mt-1 w-full rounded border border-line px-3 py-2 text-xs outline-none"
+                  className="mt-1 w-full rounded border border-line px-3 py-2 text-xs outline-none focus:border-orange font-bold text-navy"
                 />
               </div>
             </div>
