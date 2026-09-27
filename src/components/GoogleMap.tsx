@@ -1,7 +1,7 @@
 "use client";
 
 import { useSite } from "@/components/SiteProvider";
-import { resolveMapInputSync } from "@/lib/google-maps";
+import { resolveMapInputSync, DEFAULT_COMPANY_MAP_QUERY } from "@/lib/google-maps";
 
 export function GoogleMap() {
   const site = useSite();
@@ -16,10 +16,10 @@ export function GoogleMap() {
     site.addressCity || "",
   ]
     .filter(Boolean)
-    .join(", ") || "Nur Engineering Solution, 23.8050435,90.3467332";
+    .join(", ") || DEFAULT_COMPANY_MAP_QUERY;
 
   const rawUrl = site.mapEmbedUrl || site.mapShareUrl || "";
-  const zoom = typeof site.mapZoom === "number" && !isNaN(site.mapZoom) ? site.mapZoom : 16;
+  const zoom = typeof site.mapZoom === "number" && !isNaN(site.mapZoom) ? site.mapZoom : 17;
 
   const resolved = resolveMapInputSync(rawUrl, fullAddress, zoom);
   const src = resolved.embedUrl;
