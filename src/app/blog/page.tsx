@@ -5,7 +5,7 @@ import { RelatedSearch } from "@/components/RelatedSearch";
 import { getBlogPosts, getBlogCategories, getSettings, type PopulatedBlogPost } from "@/lib/data";
 
 export const metadata: Metadata = {
-  title: "Engineering Blog & Technical Guides | NUR SHOP",
+  title: "Engineering Blog & Technical Guides | NUR SHOP BD",
   description:
     "Practical industrial automation, PLC, VFD, sensors, motors and electrical maintenance guides written by electrical engineering practitioners in Bangladesh.",
 };
@@ -134,7 +134,7 @@ export default async function BlogListingPage({
 
               <div className="mt-6 pt-6 border-t border-line/60 flex items-center justify-between">
                 <span className="text-[11px] font-medium text-mist">
-                  By {featuredPost.author || "NUR SHOP Desk"}
+                  By {featuredPost.author || "NUR SHOP BD Desk"}
                 </span>
                 <Link
                   href={`/blog/${featuredPost.slug}`}
@@ -242,7 +242,7 @@ export default async function BlogListingPage({
                     {/* Card Footer */}
                     <div className="border-t border-line/60 p-5 pt-3 flex items-center justify-between">
                       <span className="text-[10px] text-mist truncate max-w-[150px]">
-                        {post.author || "NUR SHOP"}
+                        {post.author || "NUR SHOP BD"}
                       </span>
                       <Link
                         href={`/blog/${post.slug}`}

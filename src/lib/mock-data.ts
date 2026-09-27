@@ -641,7 +641,7 @@ export const mockProducts: IProduct[] = [
     name: "Semi Auto PET Blow Molding Machine",
     slug: "semi-auto-pet-blow-molding-machine-2cav",
     sku: "NES-BMM-PET2",
-    brand: "NUR SHOP Series",
+    brand: "NUR SHOP BD Series",
     category: "cat-5",
     subCategory: "sub-5-1",
     shortDescription: "2-cavity semi-automatic PET bottle stretch blow molding machine.",
@@ -661,7 +661,7 @@ export const mockProducts: IProduct[] = [
     name: "5HP Industrial Water Cooled Chiller",
     slug: "5hp-water-cooled-chiller",
     sku: "NES-CHL-5HP",
-    brand: "NUR SHOP Series",
+    brand: "NUR SHOP BD Series",
     category: "cat-6",
     subCategory: "sub-6-1",
     shortDescription: "5 HP high-efficiency water-cooled industrial refrigeration chiller.",
@@ -681,7 +681,7 @@ export const mockProducts: IProduct[] = [
     name: "Heavy Duty Plastic Crusher 10 HP",
     slug: "plastic-crusher-10hp",
     sku: "NES-CRS-10HP",
-    brand: "NUR SHOP Series",
+    brand: "NUR SHOP BD Series",
     category: "cat-7",
     subCategory: "sub-1-8",
     shortDescription: "10 HP heavy-duty plastic granulator and crusher machine.",
@@ -701,7 +701,7 @@ export const mockProducts: IProduct[] = [
     name: "Vertical Raw Material Mixer 100KG",
     slug: "vertical-mixer-100kg",
     sku: "NES-MIX-100",
-    brand: "NUR SHOP Series",
+    brand: "NUR SHOP BD Series",
     category: "cat-8",
     subCategory: "sub-1-9",
     shortDescription: "100 kg stainless steel vertical color and granule mixer.",
@@ -721,7 +721,7 @@ export const mockProducts: IProduct[] = [
     name: "Continuous Heat Seal Printing Machine",
     slug: "continuous-heat-seal-printing-machine",
     sku: "NES-PRN-HS",
-    brand: "NUR SHOP Series",
+    brand: "NUR SHOP BD Series",
     category: "cat-9",
     subCategory: "sub-9-1",
     shortDescription: "High-speed continuous heat sealing and date printing machine.",
@@ -801,7 +801,7 @@ Modern Bangladeshi industrial setups require communication between the PLC, HMIs
 - **Profinet / Ethernet/IP:** Industrial Ethernet protocols that simplify wiring and provide high bandwidth for decentralized I/O racks and high-speed multi-axis synchronization.
 
 ### 4. Brand Availability & Spare Parts Support in Dhaka
-For long-term peace of mind, prioritize controllers with readily available replacement CPU modules, expansion blocks, and local programming expertise. At **NUR SHOP**, we stock and support Siemens SIMATIC S7-1200, Delta DVP-ES2/SS2 series, and compatible expansion units for rapid same-day dispatch.`,
+For long-term peace of mind, prioritize controllers with readily available replacement CPU modules, expansion blocks, and local programming expertise. At **NUR SHOP BD**, we stock and support Siemens SIMATIC S7-1200, Delta DVP-ES2/SS2 series, and compatible expansion units for rapid same-day dispatch.`,
     coverImage: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=1600&q=80",
     category: { _id: "bcat-1", name: "PLC & Automation", slug: "plc-automation" },
     tags: ["PLC", "Siemens", "Delta", "Automation", "Factory Control"],
@@ -841,11 +841,11 @@ Perform an offline or rotational **auto-tuning routine** so the drive accurately
 #### 3. PID Closed-Loop Pressure Control
 By wiring a 4–20 mA pressure transducer (0–10 bar) into the analog input ($AI1$) and setting target pressure setpoints via digital keypad or HMI, the drive automatically modulates motor RPM to maintain rock-solid line pressure regardless of factory demand fluctuations.
 
-NUR SHOP provides complete VFD supply, matched panel enclosures, reactor chokes, and on-site tuning across Narayanganj, Gazipur, and Dhaka industrial belts.`,
+NUR SHOP BD provides complete VFD supply, matched panel enclosures, reactor chokes, and on-site tuning across Narayanganj, Gazipur, and Dhaka industrial belts.`,
     coverImage: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=1600&q=80",
     category: { _id: "bcat-2", name: "VFD & Drives", slug: "vfd-drives" },
     tags: ["VFD", "Inverters", "Energy Savings", "Pumps", "Drives"],
-    author: "NUR SHOP Technical Team",
+    author: "NUR SHOP BD Technical Team",
     readTime: "5 min read",
     featured: true,
     status: "published",
@@ -878,7 +878,7 @@ Ensure identical settings across both the PLC communication port and HMI driver 
 - **User Permission Levels:** Restrict calibration and timer settings behind a supervisor password.
 - **Trend Charts:** Log temperature and speed curves directly to USB memory or internal flash storage.
 
-NUR SHOP supplies Weintek, Delta, and Siemens touch displays with full screen programming and backup assistance.`,
+NUR SHOP BD supplies Weintek, Delta, and Siemens touch displays with full screen programming and backup assistance.`,
     coverImage: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1600&q=80",
     category: { _id: "bcat-3", name: "HMI & Displays", slug: "hmi-displays" },
     tags: ["HMI", "Modbus", "Touchscreen", "Weintek", "Panel Building"],
@@ -916,7 +916,7 @@ One of the most frequent wiring issues in factory maintenance is confusing **NPN
     coverImage: "https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=1600&q=80",
     category: { _id: "bcat-4", name: "Sensors & Detection", slug: "sensors-detection" },
     tags: ["Sensors", "Proximity", "Photoelectric", "Wiring", "Maintenance"],
-    author: "NUR SHOP Technical Desk",
+    author: "NUR SHOP BD Technical Desk",
     readTime: "5 min read",
     featured: false,
     status: "published",
@@ -946,7 +946,7 @@ Before energizing a motor that has been sitting idle or exposed to high humidity
 ### 3. Cooling Fan and Cowl Clearance
 Dust and cotton fluff clogging the motor's rear cooling fan cover cause internal stator temperatures to escalate rapidly. For every $10^\circ\text{C}$ increase above maximum rated insulation class temperature, **winding insulation lifespan is halved**.
 
-NUR SHOP provides three-phase motor replacement, rewinding inspection, and genuine SKF/NSK bearings for industrial plants.`,
+NUR SHOP BD provides three-phase motor replacement, rewinding inspection, and genuine SKF/NSK bearings for industrial plants.`,
     coverImage: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=1600&q=80",
     category: { _id: "bcat-5", name: "Motors & Maintenance", slug: "motors-maintenance" },
     tags: ["Motors", "Bearings", "Maintenance", "Insulation", "Pumps"],
@@ -978,11 +978,11 @@ Never size an AC contactor based on its pure resistive thermal rating (AC-1). Sq
 - **Type 1 Co-ordination:** Under short-circuit conditions, the contactor or overload relay may suffer internal damage, requiring inspection or replacement before restoring service.
 - **Type 2 Co-ordination:** Requires that under short circuit, no danger to operators occurs and the starter remains fully operational without component replacement (only contact welding may be easily separated).
 
-NUR SHOP stocks genuine Schneider, Chint, and Siemens contactors, auxiliary blocks, and thermal overloads ready for panel builders.`,
+NUR SHOP BD stocks genuine Schneider, Chint, and Siemens contactors, auxiliary blocks, and thermal overloads ready for panel builders.`,
     coverImage: "https://images.unsplash.com/photo-1565043589221-1a6fd9ae45c7?w=1600&q=80",
     category: { _id: "bcat-6", name: "Switchgear & Relays", slug: "switchgear-relays" },
     tags: ["Contactors", "Relays", "Circuit Breakers", "MCC", "Switchgear"],
-    author: "NUR SHOP Technical Desk",
+    author: "NUR SHOP BD Technical Desk",
     readTime: "5 min read",
     featured: false,
     status: "published",

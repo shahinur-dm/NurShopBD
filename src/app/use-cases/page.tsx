@@ -15,7 +15,7 @@ export async function generateMetadata(): Promise<Metadata> {
     site,
     title: "Use cases",
     description:
-      "How NUR SHOP is used: spare-part matching, conveyor control, VFD retrofits, panel kits, textile utilities and EEE lab benches.",
+      "How NUR SHOP BD is used: spare-part matching, conveyor control, VFD retrofits, panel kits, textile utilities and EEE lab benches.",
     path: "/use-cases",
     keywords: [
       "industrial use cases Bangladesh",

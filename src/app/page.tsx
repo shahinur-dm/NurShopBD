@@ -57,7 +57,7 @@ export default async function HomePage({
               className="group bg-white border border-line px-2 sm:px-2.5 py-1.5 sm:py-2 rounded-[2px] shadow-xs hover:border-orange hover:shadow-sm transition flex items-center justify-start gap-1.5 min-h-[54px] sm:min-h-[56px] min-w-0"
             >
               <ServiceItemIcon label={`${service.title} ${service.slug}`} />
-              <span className="min-w-0 text-[13.5px] sm:text-[14px] font-bold text-navy leading-none max-sm:line-clamp-2 sm:whitespace-nowrap">
+              <span className="min-w-0 text-[12px] min-[400px]:text-[13px] sm:text-[13px] lg:text-[12px] xl:text-[13.5px] font-bold text-navy leading-tight line-clamp-2">
                 {service.title}
               </span>
             </Link>

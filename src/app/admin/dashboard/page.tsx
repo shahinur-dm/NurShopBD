@@ -3,12 +3,11 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
+  OrdersIcon,
   ProductsIcon,
   FolderIcon,
-  NewspaperIcon,
   SettingsIcon,
   SlidersIcon,
-  ActivityIcon,
 } from "@/components/admin/AdminIcons";
 
 interface DashboardData {
@@ -22,7 +21,19 @@ interface DashboardData {
     totalBlogs: number;
     totalUsers: number;
     totalMessages: number;
+    totalOrders?: number;
+    pendingOrders?: number;
   };
+  recentOrders?: Array<{
+    _id: string;
+    orderId: string;
+    type: string;
+    product: { name: string; sku?: string };
+    customer: { name: string; phone: string };
+    totalPrice?: number;
+    status: string;
+    createdAt: string;
+  }>;
   recentProducts: Array<{
     _id: string;
     name: string;
@@ -88,15 +99,16 @@ export default function AdminDashboardPage() {
             Dashboard Overview
           </h2>
           <p className="mt-1 text-xs text-steel">
-            Manage your machinery catalog, categories, content and website settings.
+            Manage your machinery catalog, customer orders, categories, content and website settings.
           </p>
         </div>
         <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-          <Link href="/admin/products/new" className="btn-orange px-3.5 py-2 text-xs font-bold uppercase flex-1 sm:flex-none text-center">
-            + Add Product
+          <Link href="/admin/orders" className="btn-orange px-3.5 py-2 text-xs font-bold uppercase flex-1 sm:flex-none text-center flex items-center justify-center gap-1.5">
+            <OrdersIcon size={14} className="text-white" />
+            <span>Orders ({stats?.pendingOrders ?? 0} Pending)</span>
           </Link>
-          <Link href="/admin/blogs/new" className="btn-navy px-3.5 py-2 text-xs font-bold uppercase flex-1 sm:flex-none text-center">
-            + Add Blog
+          <Link href="/admin/products/new" className="btn-navy px-3.5 py-2 text-xs font-bold uppercase flex-1 sm:flex-none text-center">
+            + Add Product
           </Link>
           <Link href="/admin/settings" className="border border-line bg-paper px-3.5 py-2 text-xs font-bold uppercase text-navy hover:bg-white transition flex-1 sm:flex-none text-center flex items-center justify-center gap-1.5">
             <SettingsIcon size={14} className="text-steel" />
@@ -107,6 +119,20 @@ export default function AdminDashboardPage() {
 
       {/* Metrics Grid */}
       <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
+        {/* Orders */}
+        <Link href="/admin/orders" className="rounded-lg border border-line bg-white p-4 sm:p-5 shadow-xs hover:border-orange transition group block">
+          <div className="flex items-center justify-between">
+            <p className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-mist group-hover:text-orange">Orders & Inquiries</p>
+            <div className="grid h-8 w-8 place-items-center rounded bg-orange/10 text-orange">
+              <OrdersIcon size={18} />
+            </div>
+          </div>
+          <p className="mt-2.5 sm:mt-3 font-display text-2xl sm:text-3xl font-bold text-navy">{stats?.totalOrders ?? 0}</p>
+          <div className="mt-2 flex flex-wrap items-center gap-1.5 sm:gap-2 text-[10.5px] sm:text-[11px] text-steel">
+            <span className="text-amber-600 font-semibold">{stats?.pendingOrders ?? 0} Pending Action</span>
+          </div>
+        </Link>
+
         {/* Total Products */}
         <div className="rounded-lg border border-line bg-white p-4 sm:p-5 shadow-xs">
           <div className="flex items-center justify-between">
@@ -148,22 +174,68 @@ export default function AdminDashboardPage() {
           <p className="mt-2.5 sm:mt-3 font-display text-2xl sm:text-3xl font-bold text-navy">{stats?.totalCategories ?? 0}</p>
           <p className="mt-2 text-[10.5px] sm:text-[11px] text-steel">Machine & parts groups</p>
         </div>
-
-        {/* Blogs & Articles */}
-        <div className="rounded-lg border border-line bg-white p-4 sm:p-5 shadow-xs">
-          <div className="flex items-center justify-between">
-            <p className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-mist">Blog Posts</p>
-            <div className="grid h-8 w-8 place-items-center rounded bg-orange/10 text-orange">
-              <NewspaperIcon size={18} />
-            </div>
-          </div>
-          <p className="mt-2.5 sm:mt-3 font-display text-2xl sm:text-3xl font-bold text-orange">{stats?.totalBlogs ?? 0}</p>
-          <p className="mt-2 text-[10.5px] sm:text-[11px] text-steel">Articles & technical notes</p>
-        </div>
       </div>
 
       {/* Two-Column Tables */}
       <div className="grid gap-6 lg:grid-cols-2">
+        {/* Recent Orders */}
+        <div className="rounded-lg border border-line bg-white shadow-xs overflow-hidden">
+          <div className="flex items-center justify-between border-b border-line px-5 py-4 bg-paper/40">
+            <h3 className="font-display text-sm font-bold uppercase tracking-wide text-navy flex items-center gap-2">
+              <OrdersIcon size={16} className="text-orange" />
+              <span>Recent Orders & Inquiries</span>
+            </h3>
+            <Link href="/admin/orders" className="text-xs font-semibold text-orange hover:underline">
+              View All Orders →
+            </Link>
+          </div>
+          <div className="divide-y divide-line/60 overflow-x-auto">
+            {!data?.recentOrders || data.recentOrders.length === 0 ? (
+              <p className="p-5 text-center text-xs text-mist">No recent orders yet</p>
+            ) : (
+              data.recentOrders.map((ord) => (
+                <div key={ord._id} className="flex items-center justify-between p-4 hover:bg-paper/30 transition text-xs">
+                  <div className="min-w-0 pr-3">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-bold text-navy">{ord.orderId}</span>
+                      <span
+                        className={`rounded px-1.5 py-0.2 text-[9.5px] font-bold uppercase ${
+                          ord.type === "ORDER" ? "bg-blue-100 text-blue-800" : "bg-orange/15 text-orange"
+                        }`}
+                      >
+                        {ord.type}
+                      </span>
+                    </div>
+                    <p className="text-steel font-semibold truncate mt-0.5">{ord.product.name}</p>
+                    <p className="text-[11px] text-mist">
+                      {ord.customer.name} · {ord.customer.phone}
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <span
+                      className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase ${
+                        ord.status === "Pending"
+                          ? "bg-amber-100 text-amber-800"
+                          : ord.status === "Delivered"
+                          ? "bg-emerald-100 text-emerald-800"
+                          : "bg-slate-100 text-slate-800"
+                      }`}
+                    >
+                      {ord.status}
+                    </span>
+                    <Link
+                      href="/admin/orders"
+                      className="text-[11px] text-orange hover:underline font-semibold"
+                    >
+                      Inspect →
+                    </Link>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
         {/* Recent Products */}
         <div className="rounded-lg border border-line bg-white shadow-xs overflow-hidden">
           <div className="flex items-center justify-between border-b border-line px-5 py-4 bg-paper/40">
@@ -201,39 +273,6 @@ export default function AdminDashboardPage() {
                       Edit
                     </Link>
                   </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* Recent Activity Log */}
-        <div className="rounded-lg border border-line bg-white shadow-xs overflow-hidden">
-          <div className="flex items-center justify-between border-b border-line px-5 py-4 bg-paper/40">
-            <h3 className="font-display text-sm font-bold uppercase tracking-wide text-navy flex items-center gap-2">
-              <ActivityIcon size={16} className="text-orange" />
-              <span>Audit Activity Log</span>
-            </h3>
-            <Link href="/admin/logs" className="text-xs font-semibold text-orange hover:underline">
-              View All Logs →
-            </Link>
-          </div>
-          <div className="divide-y divide-line/60">
-            {data?.recentLogs.length === 0 ? (
-              <p className="p-5 text-center text-xs text-mist">No recent activity</p>
-            ) : (
-              data?.recentLogs.map((log) => (
-                <div key={log._id} className="p-4 text-xs">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-bold text-navy">{log.action}</span>
-                    <span className="text-[10px] text-mist">
-                      {new Date(log.createdAt).toLocaleDateString()} {new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-steel leading-relaxed">{log.details}</p>
-                  {log.user && (
-                    <p className="mt-1 text-[10px] text-orange">By: {log.user.name}</p>
-                  )}
                 </div>
               ))
             )}

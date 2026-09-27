@@ -255,8 +255,8 @@ export function NavBar() {
           </div>
           <div className="flex flex-col justify-center min-w-0 md:min-w-max">
             <div className="font-display text-[16px] sm:text-[20px] md:text-[22px] xl:text-[24px] font-extrabold uppercase leading-none tracking-[0.02em] sm:tracking-[0.03em] whitespace-normal sm:whitespace-nowrap">
-              <span className="text-navy">{(site.brandName || "NUR SHOP").split(" ")[0]} </span>
-              <span className="text-orange">{(site.brandName || "NUR SHOP").split(" ").slice(1).join(" ")}</span>
+              <span className="text-navy">{(site.brandName || "NUR SHOP BD").replace(/^NUR SHOP$/i, "NUR SHOP BD").split(" ")[0]} </span>
+              <span className="text-orange">{(site.brandName || "NUR SHOP BD").replace(/^NUR SHOP$/i, "NUR SHOP BD").split(" ").slice(1).join(" ")}</span>
             </div>
             <span className="mt-0.5 sm:mt-1 text-[9.5px] sm:text-[11px] md:text-[11.5px] font-medium leading-none tracking-tight text-steel whitespace-normal sm:whitespace-nowrap">
               {site.tagline || "Machine, spare parts and Technical service provider"}

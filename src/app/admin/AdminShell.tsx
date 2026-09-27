@@ -63,7 +63,7 @@ export function AdminShell({
         </main>
 
         <footer className="border-t border-line bg-white px-6 py-3 text-center text-xs text-mist">
-          <span>NUR SHOP CMS · Built for Administrative Management</span>
+          <span>NUR SHOP BD CMS · Built for Administrative Management</span>
         </footer>
       </div>
     </div>

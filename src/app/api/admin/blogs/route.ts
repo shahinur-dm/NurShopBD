@@ -126,7 +126,7 @@ export async function POST(req: Request) {
       summary: String(body.summary).trim(),
       content: String(body.content).trim(),
       coverImage: body.coverImage ? String(body.coverImage).trim() : "",
-      author: body.author ? String(body.author).trim() : (admin.name || "NUR SHOP Team"),
+      author: body.author ? String(body.author).trim() : (admin.name || "NUR SHOP BD Team"),
       category: categoryRef,
       tags: Array.isArray(body.tags) ? body.tags : [],
       seoTitle: body.seoTitle ? String(body.seoTitle).trim() : "",

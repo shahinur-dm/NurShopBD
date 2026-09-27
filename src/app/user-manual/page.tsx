@@ -15,7 +15,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
     site,
     title: "User Manual",
-    description: "Download user manuals from NUR SHOP.",
+    description: "Download user manuals from NUR SHOP BD.",
     path: "/user-manual",
   });
 }

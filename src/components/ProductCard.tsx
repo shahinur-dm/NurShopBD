@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { Img } from "@/components/Img";
 import type { PopulatedProduct } from "@/lib/data";
+import { useOrderModal } from "@/components/OrderModal";
 
 const TECH_ABBR = new Set([
   "PLC",
@@ -53,6 +56,8 @@ export function ProductCard({
   product: PopulatedProduct;
   size?: "lg" | "md" | "sm";
 }) {
+  const { openOrderModal } = useOrderModal();
+
   const aspect =
     size === "lg"
       ? "aspect-[4/3.6]"
@@ -61,6 +66,12 @@ export function ProductCard({
       : "aspect-[1/1.05]";
   const category =
     typeof product.category === "object" ? product.category.name : "";
+
+  const hasPrice =
+    product.price !== undefined &&
+    product.price !== null &&
+    !isNaN(Number(product.price)) &&
+    Number(product.price) > 0;
 
   return (
     <div className="catalog-card group flex flex-col h-full bg-white border border-line rounded-[2px] shadow-xs hover:border-orange/60 hover:shadow-sm transition">
@@ -97,7 +108,7 @@ export function ProductCard({
             >
               {displayProductName(product.name)}
             </h3>
-            {product.price !== undefined && product.price !== null && !isNaN(Number(product.price)) && Number(product.price) > 0 ? (
+            {hasPrice ? (
               <span className="shrink-0 font-display text-[15px] sm:text-[16.5px] font-extrabold text-navy tracking-tight text-right whitespace-nowrap leading-tight">
                 ৳ {Math.round(Number(product.price)).toLocaleString("en-US")}
               </span>
@@ -110,21 +121,22 @@ export function ProductCard({
           )}
         </Link>
 
-        {/* 3. Action Buttons: ASK UPDATED PRICE (Orange) & VIEW DETAILS (Green) */}
+        {/* 3. Action Buttons: ORDER NOW / ASK PRICE (Orange) & VIEW DETAILS (Green) */}
         <div className="pt-2 sm:pt-2.5 border-t border-line mt-auto flex items-center gap-1.5 sm:gap-2 min-w-0">
-          {/* ASK UPDATED PRICE (Orange) */}
-          <Link
-            href={`/contact?product=${product.slug}`}
-            className="flex-1 min-w-0 inline-flex items-center justify-center bg-orange font-display font-bold uppercase text-white transition hover:bg-[#e05300] active:scale-95 shadow-2xs h-8 sm:h-9 px-1 text-[9.5px] min-[360px]:text-[10px] sm:text-[11px] lg:text-[10px] xl:text-[11px] tracking-tight rounded-[2px] text-center leading-none"
-            title={`Ask updated price for ${product.name}`}
+          {/* ORDER NOW / ASK PRICE (Orange) */}
+          <button
+            type="button"
+            onClick={() => openOrderModal(product, hasPrice ? "ORDER" : "PRICE REQUEST")}
+            className="flex-1 min-w-0 inline-flex items-center justify-center bg-orange hover:bg-[#e05300] active:scale-95 text-white font-display font-bold uppercase tracking-tight text-[10.5px] sm:text-[11.5px] h-8 sm:h-9 px-1.5 sm:px-2 rounded-[2px] transition shadow-2xs text-center leading-none cursor-pointer"
+            title={hasPrice ? `Order ${product.name} now` : `Ask price for ${product.name}`}
           >
-            <span className="whitespace-nowrap">ASK UPDATED PRICE</span>
-          </Link>
+            <span className="whitespace-nowrap">{hasPrice ? "ORDER NOW" : "ASK PRICE"}</span>
+          </button>
 
           {/* VIEW DETAILS (Green) */}
           <Link
             href={`/products/${product.slug}`}
-            className="flex-1 min-w-0 inline-flex items-center justify-center bg-[#16a34a] font-display font-bold uppercase text-white transition hover:bg-[#15803d] active:scale-95 shadow-2xs h-8 sm:h-9 px-1.5 sm:px-2 text-[11px] sm:text-[12.5px] tracking-[0.02em] rounded-[2px] text-center leading-none"
+            className="flex-1 min-w-0 inline-flex items-center justify-center bg-[#16a34a] hover:bg-[#15803d] active:scale-95 text-white font-display font-bold uppercase tracking-tight text-[10.5px] sm:text-[11.5px] h-8 sm:h-9 px-1.5 sm:px-2 rounded-[2px] transition shadow-2xs text-center leading-none"
             title={`View details for ${product.name}`}
           >
             <span className="whitespace-nowrap">VIEW DETAILS</span>

@@ -150,8 +150,9 @@ export function OurProductSection({
                 <span>Loading more products...</span>
               </>
             ) : (
-              <span>
-                View More Product <span className="inline-block align-middle text-[24px] leading-none">→</span>
+              <span className="inline-flex items-center justify-center gap-1.5">
+                <span>VIEW MORE PRODUCT</span>
+                <span className="inline-flex items-center justify-center leading-none text-[15px] font-sans">→</span>
               </span>
             )}
           </button>

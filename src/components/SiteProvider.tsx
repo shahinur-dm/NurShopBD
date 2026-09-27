@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 import type { ISiteSettings, IUseCase } from "@/lib/models";
+import { OrderModalProvider } from "@/components/OrderModal";
 
 type SiteContextValue = {
   settings: ISiteSettings;
@@ -68,7 +69,9 @@ export function SiteProvider({
 
   return (
     <SiteContext.Provider value={{ settings, useCases }}>
-      {children}
+      <OrderModalProvider>
+        {children}
+      </OrderModalProvider>
     </SiteContext.Provider>
   );
 }

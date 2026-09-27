@@ -120,8 +120,8 @@ export function Footer() {
             />
             <div className="min-w-0 sm:min-w-max">
               <p className="font-display text-[18px] sm:text-[20px] lg:text-[22px] font-extrabold uppercase leading-none tracking-[0.03em] whitespace-normal sm:whitespace-nowrap">
-                <span className="text-white">{(site.brandName || "NUR SHOP").split(" ")[0]} </span>
-                <span className="text-orange">{(site.brandName || "NUR SHOP").split(" ").slice(1).join(" ")}</span>
+                <span className="text-white">{(site.brandName || "NUR SHOP BD").replace(/^NUR SHOP$/i, "NUR SHOP BD").split(" ")[0]} </span>
+                <span className="text-orange">{(site.brandName || "NUR SHOP BD").replace(/^NUR SHOP$/i, "NUR SHOP BD").split(" ").slice(1).join(" ")}</span>
               </p>
               <p className="mt-1 text-[11.5px] sm:text-[12px] font-medium leading-none tracking-tight text-white/55 whitespace-normal sm:whitespace-nowrap">
                 {site.tagline || "Machine, spare parts and Technical service provider"}
@@ -464,7 +464,7 @@ export function Footer() {
       <div className="border-t border-white/10">
         <div className="shell flex flex-col gap-1 py-4 text-[11px] uppercase tracking-[0.14em] text-white/40 sm:flex-row sm:justify-between">
           <span>
-            © {new Date().getFullYear()} {site.brandName || "NUR SHOP"}
+            © {new Date().getFullYear()} {(site.brandName || "NUR SHOP BD").replace(/^NUR SHOP$/i, "NUR SHOP BD")}
           </span>
           <span>EEE machine parts · Bangladesh</span>
         </div>

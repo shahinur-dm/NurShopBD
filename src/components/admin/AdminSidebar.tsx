@@ -5,6 +5,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import {
   DashboardIcon,
+  OrdersIcon,
   ProductsIcon,
   PlusCircleIcon,
   FolderIcon,
@@ -59,6 +60,12 @@ const navGroups: NavGroup[] = [
     title: "OVERVIEW",
     entries: [
       { type: "link", label: "Dashboard", href: "/admin/dashboard", Icon: DashboardIcon },
+    ],
+  },
+  {
+    title: "SALES & ORDERS",
+    entries: [
+      { type: "link", label: "Orders", href: "/admin/orders", Icon: OrdersIcon },
     ],
   },
   {
@@ -256,6 +263,8 @@ export function AdminSidebar({
                     const isChild =
                       entry.href === "/admin/dashboard"
                         ? pathname === "/admin"
+                        : entry.href === "/admin/orders"
+                        ? pathname.startsWith("/admin/orders/")
                         : entry.href === "/admin/products"
                         ? pathname.startsWith("/admin/products/") && pathname !== "/admin/products/new"
                         : entry.href === "/admin/blogs"

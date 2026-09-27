@@ -20,10 +20,10 @@ export async function generateMetadata({
   const { slug } = await params;
   const post = await getBlogPostBySlug(slug);
   if (!post) {
-    return { title: "Article Not Found | NUR SHOP" };
+    return { title: "Article Not Found | NUR SHOP BD" };
   }
   return {
-    title: `${post.title} | NUR SHOP Blog`,
+    title: `${post.title} | NUR SHOP BD Blog`,
     description: post.summary,
   };
 }
@@ -198,7 +198,7 @@ export default async function BlogDetailsPage({
                 </div>
                 <div>
                   <p className="font-bold text-navy">
-                    {post.author || "NUR SHOP Desk"}
+                    {post.author || "NUR SHOP BD Desk"}
                   </p>
                   <p className="text-[10px] text-mist">
                     Electrical &amp; Industrial Automation Division

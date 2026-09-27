@@ -58,7 +58,7 @@ export { defaultFooterQuickLinks, defaultFooterServices };
 
 export const fallbackSettings: ISiteSettings = {
   _id: "fallback",
-  brandName: "NUR SHOP",
+  brandName: "NUR SHOP BD",
   tagline: "Machine, spare parts and Technical service provider",
   description:
     "EEE-led supplier of PLC, motors, drives, sensors, and industrial spare parts with technical service across Bangladesh.",
@@ -104,7 +104,7 @@ export const fallbackSettings: ISiteSettings = {
   },
   seo: {
     defaultTitle:
-      "NUR SHOP | Machine Parts & Technical Service",
+      "NUR SHOP BD | Machine Parts & Technical Service",
     defaultDescription:
       "Buy PLC, motors, VFD, sensors, contactors and industrial spare parts. Technical service from an EEE engineering desk in Bangladesh.",
     keywords: [
@@ -187,7 +187,9 @@ export async function getSettings(): Promise<ISiteSettings> {
   const rawBrandName = (merged.brandName as string) || fallbackSettings.brandName;
   const brandName =
     rawBrandName && /nur\s*engineering(\s*solution)?/i.test(rawBrandName.trim())
-      ? "NUR SHOP"
+      ? "NUR SHOP BD"
+      : rawBrandName === "NUR SHOP" || rawBrandName === "Nur Shop"
+      ? "NUR SHOP BD"
       : rawBrandName || fallbackSettings.brandName;
 
   return {
@@ -286,10 +288,10 @@ export async function getSettings(): Promise<ISiteSettings> {
 
 export const fallbackCompanyProfile: ICompanyProfile = {
   _id: "company-profile",
-  name: "NUR SHOP",
+  name: "NUR SHOP BD",
   tagline: "Machine, spare parts and Technical service provider",
   about:
-    "NUR SHOP is a Bangladesh-based machine parts and technical service desk founded by an Electrical and Electronic Engineering student. We sell PLC, motors, drives, sensors, contactors and workshop spare parts — and we help you pick the right substitute when the original part is gone.",
+    "NUR SHOP BD is a Bangladesh-based machine parts and technical service desk founded by an Electrical and Electronic Engineering student. We sell PLC, motors, drives, sensors, contactors and workshop spare parts — and we help you pick the right substitute when the original part is gone.",
   mission:
     "Supply accurate industrial parts with honest specs, clear prices, and EEE-backed selection help.",
   vision:
@@ -327,7 +329,9 @@ export async function getCompany(): Promise<ICompanyProfile> {
   const rawCompanyName = doc.name || fallbackCompanyProfile.name;
   const companyName =
     rawCompanyName && /nur\s*engineering(\s*solution)?/i.test(rawCompanyName.trim())
-      ? "NUR SHOP"
+      ? "NUR SHOP BD"
+      : rawCompanyName === "NUR SHOP" || rawCompanyName === "Nur Shop"
+      ? "NUR SHOP BD"
       : rawCompanyName;
 
   return {

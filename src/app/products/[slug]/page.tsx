@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CatalogShell } from "@/components/CatalogShell";
-import { Img } from "@/components/Img";
 import { ProductCard } from "@/components/ProductCard";
+import { ProductDetailOrderButton } from "@/components/ProductDetailOrderButton";
 import { RelatedSearch } from "@/components/RelatedSearch";
 import { ProductGallery } from "@/components/ProductGallery";
 import { ProductTabs } from "@/components/ProductTabs";
@@ -216,19 +216,8 @@ export default async function ProductDetailPage({
             {/* Action Buttons: Ask Price & WhatsApp */}
             <div className="mt-3 border-t border-[#e2e8f0] pt-3">
               <div className="flex flex-wrap items-center gap-3">
-                <Link
-                  href={`/contact?product=${product.slug}`}
-                  className="inline-flex items-center justify-center gap-2 bg-[#ea580c] hover:bg-[#c2410c] text-white px-6 py-2.5 sm:py-3 font-display text-xs font-bold uppercase tracking-wider rounded-[2px] transition shadow-xs flex-1 sm:flex-none text-center cursor-pointer"
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="h-4 w-4 fill-none stroke-current"
-                    strokeWidth="2.2"
-                  >
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                  </svg>
-                  <span>ASK UPDATED PRICE</span>
-                </Link>
+                <ProductDetailOrderButton product={product} />
+
 
                 <a
                   href={`https://wa.me/${cleanPhone}?text=${encodeURIComponent(

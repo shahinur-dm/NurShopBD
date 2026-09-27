@@ -41,7 +41,7 @@ export function BlogForm({ initialData, isEdit }: BlogFormProps) {
   const [summary, setSummary] = useState(initialData?.summary || "");
   const [content, setContent] = useState(initialData?.content || "");
   const [coverImage, setCoverImage] = useState(initialData?.coverImage || "");
-  const [author, setAuthor] = useState(initialData?.author || "NUR SHOP Team");
+  const [author, setAuthor] = useState(initialData?.author || "NUR SHOP BD Team");
   const [category, setCategory] = useState(
     typeof initialData?.category === "object"
       ? initialData.category._id

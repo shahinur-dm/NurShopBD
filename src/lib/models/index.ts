@@ -15,3 +15,4 @@ export * from "./MediaItem";
 export * from "./ActivityLog";
 export * from "./Feature";
 export * from "./DownloadFile";
+export * from "./Order";

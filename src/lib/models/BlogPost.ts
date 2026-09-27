@@ -27,7 +27,7 @@ const BlogPostSchema = new Schema<IBlogPost>(
     summary: { type: String, required: true },
     content: { type: String, required: true },
     coverImage: String,
-    author: { type: String, default: "NUR SHOP Team" },
+    author: { type: String, default: "NUR SHOP BD Team" },
     category: { type: Schema.Types.ObjectId, ref: "BlogCategory" },
     tags: [{ type: String }],
     seoTitle: String,

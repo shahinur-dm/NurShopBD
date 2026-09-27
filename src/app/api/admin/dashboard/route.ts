@@ -7,6 +7,7 @@ import {
   User,
   ActivityLog,
   ContactMessage,
+  Order,
 } from "@/lib/models";
 import { getCurrentAdminUser } from "@/lib/auth";
 
@@ -29,6 +30,9 @@ export async function GET() {
         totalBlogs,
         totalUsers,
         totalMessages,
+        totalOrders,
+        pendingOrders,
+        recentOrders,
         recentProducts,
         recentBlogs,
         recentLogs,
@@ -40,6 +44,9 @@ export async function GET() {
         BlogPost.countDocuments(),
         User.countDocuments(),
         ContactMessage.countDocuments(),
+        Order.countDocuments(),
+        Order.countDocuments({ status: "Pending" }),
+        Order.find().sort({ createdAt: -1 }).limit(5).lean(),
         Product.find()
           .populate("category", "name slug")
           .sort({ createdAt: -1 })
@@ -64,7 +71,10 @@ export async function GET() {
           totalBlogs,
           totalUsers,
           totalMessages,
+          totalOrders,
+          pendingOrders,
         },
+        recentOrders,
         recentProducts,
         recentBlogs,
         recentLogs,
@@ -86,7 +96,10 @@ export async function GET() {
       totalBlogs: 4,
       totalUsers: 1,
       totalMessages: 0,
+      totalOrders: 0,
+      pendingOrders: 0,
     },
+    recentOrders: [],
     recentProducts: [],
     recentBlogs: [],
     recentLogs: [],
