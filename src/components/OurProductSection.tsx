@@ -152,7 +152,7 @@ export function OurProductSection({
             ) : (
               <span className="inline-flex items-center justify-center gap-1.5">
                 <span>VIEW MORE PRODUCT</span>
-                <span className="inline-flex items-center justify-center leading-none text-[15px] font-sans">→</span>
+                <span className="inline-flex items-center justify-center leading-none text-[18px] sm:text-[19px] font-sans">→</span>
               </span>
             )}
           </button>

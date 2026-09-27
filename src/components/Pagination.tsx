@@ -50,17 +50,17 @@ export function Pagination({
             type="button"
             disabled={disabled}
             onClick={() => onPageChange(currentPage - 1)}
-            className="h-7 sm:h-8 px-2.5 sm:px-3 inline-flex items-center justify-center gap-1 text-[11px] sm:text-[12px] font-bold uppercase tracking-wider border border-line bg-white text-navy hover:border-orange hover:text-orange transition rounded-[2px] disabled:opacity-50 cursor-pointer"
+            className="h-7 sm:h-8 px-2.5 sm:px-3 inline-flex items-center justify-center gap-1.5 text-[11px] sm:text-[12px] font-bold uppercase tracking-wider border border-line bg-white text-navy hover:border-orange hover:text-orange transition rounded-[2px] disabled:opacity-50 cursor-pointer"
           >
-            <span className="inline-flex items-center justify-center leading-none text-[15px] font-sans">←</span>
+            <span className="inline-flex items-center justify-center leading-none text-[17px] sm:text-[18px] font-sans">←</span>
             <span>PREV</span>
           </button>
         ) : (
           <Link
             href={createPageUrl(currentPage - 1)}
-            className="h-7 sm:h-8 px-2.5 sm:px-3 inline-flex items-center justify-center gap-1 text-[11px] sm:text-[12px] font-bold uppercase tracking-wider border border-line bg-white text-navy hover:border-orange hover:text-orange transition rounded-[2px]"
+            className="h-7 sm:h-8 px-2.5 sm:px-3 inline-flex items-center justify-center gap-1.5 text-[11px] sm:text-[12px] font-bold uppercase tracking-wider border border-line bg-white text-navy hover:border-orange hover:text-orange transition rounded-[2px]"
           >
-            <span className="inline-flex items-center justify-center leading-none text-[15px] font-sans">←</span>
+            <span className="inline-flex items-center justify-center leading-none text-[17px] sm:text-[18px] font-sans">←</span>
             <span>PREV</span>
           </Link>
         ))}
@@ -102,18 +102,18 @@ export function Pagination({
             type="button"
             disabled={disabled}
             onClick={() => onPageChange(currentPage + 1)}
-            className="h-7 sm:h-8 px-2.5 sm:px-3 inline-flex items-center justify-center gap-1 text-[11px] sm:text-[12px] font-bold uppercase tracking-wider border border-line bg-white text-navy hover:border-orange hover:text-orange transition rounded-[2px] disabled:opacity-50 cursor-pointer"
+            className="h-7 sm:h-8 px-2.5 sm:px-3 inline-flex items-center justify-center gap-1.5 text-[11px] sm:text-[12px] font-bold uppercase tracking-wider border border-line bg-white text-navy hover:border-orange hover:text-orange transition rounded-[2px] disabled:opacity-50 cursor-pointer"
           >
             <span>NEXT</span>
-            <span className="inline-flex items-center justify-center leading-none text-[15px] font-sans">→</span>
+            <span className="inline-flex items-center justify-center leading-none text-[17px] sm:text-[18px] font-sans">→</span>
           </button>
         ) : (
           <Link
             href={createPageUrl(currentPage + 1)}
-            className="h-7 sm:h-8 px-2.5 sm:px-3 inline-flex items-center justify-center gap-1 text-[11px] sm:text-[12px] font-bold uppercase tracking-wider border border-line bg-white text-navy hover:border-orange hover:text-orange transition rounded-[2px]"
+            className="h-7 sm:h-8 px-2.5 sm:px-3 inline-flex items-center justify-center gap-1.5 text-[11px] sm:text-[12px] font-bold uppercase tracking-wider border border-line bg-white text-navy hover:border-orange hover:text-orange transition rounded-[2px]"
           >
             <span>NEXT</span>
-            <span className="inline-flex items-center justify-center leading-none text-[15px] font-sans">→</span>
+            <span className="inline-flex items-center justify-center leading-none text-[17px] sm:text-[18px] font-sans">→</span>
           </Link>
         ))}
     </nav>

@@ -127,7 +127,7 @@ export function ProductCard({
           <button
             type="button"
             onClick={() => openOrderModal(product, hasPrice ? "ORDER" : "PRICE REQUEST")}
-            className="flex-1 min-w-0 inline-flex items-center justify-center bg-orange hover:bg-[#e05300] active:scale-95 text-white font-display font-bold uppercase tracking-tight text-[10.5px] sm:text-[11.5px] h-8 sm:h-9 px-1.5 sm:px-2 rounded-[2px] transition shadow-2xs text-center leading-none cursor-pointer"
+            className="flex-1 min-w-0 inline-flex items-center justify-center bg-orange hover:bg-[#e05300] active:scale-95 text-white font-display font-bold uppercase tracking-[0.02em] text-[12px] sm:text-[13px] h-8 sm:h-9 px-1.5 sm:px-2 rounded-[2px] transition shadow-2xs text-center leading-none cursor-pointer"
             title={hasPrice ? `Order ${product.name} now` : `Ask price for ${product.name}`}
           >
             <span className="whitespace-nowrap">{hasPrice ? "ORDER NOW" : "ASK PRICE"}</span>
@@ -136,7 +136,7 @@ export function ProductCard({
           {/* VIEW DETAILS (Green) */}
           <Link
             href={`/products/${product.slug}`}
-            className="flex-1 min-w-0 inline-flex items-center justify-center bg-[#16a34a] hover:bg-[#15803d] active:scale-95 text-white font-display font-bold uppercase tracking-tight text-[10.5px] sm:text-[11.5px] h-8 sm:h-9 px-1.5 sm:px-2 rounded-[2px] transition shadow-2xs text-center leading-none"
+            className="flex-1 min-w-0 inline-flex items-center justify-center bg-[#16a34a] hover:bg-[#15803d] active:scale-95 text-white font-display font-bold uppercase tracking-[0.02em] text-[12px] sm:text-[13px] h-8 sm:h-9 px-1.5 sm:px-2 rounded-[2px] transition shadow-2xs text-center leading-none"
             title={`View details for ${product.name}`}
           >
             <span className="whitespace-nowrap">VIEW DETAILS</span>
