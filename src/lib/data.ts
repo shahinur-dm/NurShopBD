@@ -77,7 +77,7 @@ export const fallbackSettings: ISiteSettings = {
   workingDays: "Saturday – Thursday",
   mapShareUrl: "",
   mapEmbedUrl:
-    "https://maps.google.com/maps?q=Nur%20Engineering%20Solution%2C%20House%2043-44%2C%20Road-1%2C%20Block-B%2C%20Mirpur-1%2C%20Dhaka-1216%2C%20Bangladesh&t=&z=16&ie=UTF8&iwloc=&output=embed",
+    "https://maps.google.com/maps?q=Nur%20Engineering%20Solution%2C%2023.8050435%2C90.3467332&t=&z=16&ie=UTF8&iwloc=near&output=embed",
   mapZoom: 16,
   contactPage: {
     heading: "Send a part number or photo",

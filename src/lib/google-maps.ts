@@ -67,7 +67,7 @@ export function isGenericLocation(query?: string): boolean {
  * Default official company location query with name and coordinates
  */
 export const DEFAULT_COMPANY_MAP_QUERY =
-  "Nur Engineering Solution, House 43-44, Road-1, Block-B, Mirpur-1, Dhaka-1216, Bangladesh";
+  "Nur Engineering Solution, 23.8050435,90.3467332";
 
 /**
  * Builds standard Google Maps embed URL
@@ -76,7 +76,7 @@ export function buildEmbedUrl(query: string, zoom: number = 16): string {
   const effectiveQuery = isGenericLocation(query) ? DEFAULT_COMPANY_MAP_QUERY : query;
   const cleanQuery = encodeURIComponent(effectiveQuery.trim());
   const safeZoom = Math.min(Math.max(Number(zoom) || 16, 1), 21);
-  return `https://maps.google.com/maps?q=${cleanQuery}&t=&z=${safeZoom}&ie=UTF8&iwloc=&output=embed`;
+  return `https://maps.google.com/maps?q=${cleanQuery}&t=&z=${safeZoom}&ie=UTF8&iwloc=near&output=embed`;
 }
 
 /**

@@ -6,7 +6,7 @@ import { resolveMapInputSync } from "@/lib/google-maps";
 export function GoogleMap() {
   const site = useSite();
 
-  const companyPrefix = site.companyName || site.brandName || "Nur Engineering Solution";
+  const companyPrefix = "Nur Engineering Solution";
   const fullAddress = [
     companyPrefix,
     site.addressHouse ? `House ${site.addressHouse}` : "",
@@ -16,7 +16,7 @@ export function GoogleMap() {
     site.addressCity || "",
   ]
     .filter(Boolean)
-    .join(", ") || "Nur Engineering Solution, House#43-44, Road-1, Block -B, Mirpur-1 (Beside Shah Ali Thana), Dhaka-1216, Bangladesh";
+    .join(", ") || "Nur Engineering Solution, 23.8050435,90.3467332";
 
   const rawUrl = site.mapEmbedUrl || site.mapShareUrl || "";
   const zoom = typeof site.mapZoom === "number" && !isNaN(site.mapZoom) ? site.mapZoom : 16;
