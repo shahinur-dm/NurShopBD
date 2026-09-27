@@ -204,6 +204,15 @@ export default async function ProductDetailPage({
               {product.shortDescription}
             </p>
 
+            {/* Product Price Display */}
+            {product.price !== undefined && product.price !== null && !isNaN(Number(product.price)) && Number(product.price) > 0 ? (
+              <div className="mt-2.5 sm:mt-3 flex items-baseline gap-2">
+                <span className="font-display text-2xl sm:text-[28px] font-extrabold text-navy tracking-tight">
+                  ৳ {Math.round(Number(product.price)).toLocaleString("en-US")}
+                </span>
+              </div>
+            ) : null}
+
             {/* Action Buttons: Ask Price & WhatsApp */}
             <div className="mt-3 border-t border-[#e2e8f0] pt-3">
               <div className="flex flex-wrap items-center gap-3">

@@ -115,7 +115,7 @@ export function ProductCard({
           {/* ASK UPDATED PRICE (Orange) */}
           <Link
             href={`/contact?product=${product.slug}`}
-            className="flex-1 min-w-0 inline-flex items-center justify-center bg-orange font-display font-bold uppercase text-white transition hover:bg-[#e05300] active:scale-95 shadow-2xs h-8 sm:h-9 px-1.5 sm:px-2 text-[11px] sm:text-[12.5px] tracking-[0.02em] rounded-[2px] text-center leading-none"
+            className="flex-1 min-w-0 inline-flex items-center justify-center bg-orange font-display font-bold uppercase text-white transition hover:bg-[#e05300] active:scale-95 shadow-2xs h-8 sm:h-9 px-1 text-[9.5px] min-[360px]:text-[10px] sm:text-[11px] lg:text-[10px] xl:text-[11px] tracking-tight rounded-[2px] text-center leading-none"
             title={`Ask updated price for ${product.name}`}
           >
             <span className="whitespace-nowrap">ASK UPDATED PRICE</span>
