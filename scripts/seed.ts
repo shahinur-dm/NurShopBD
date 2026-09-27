@@ -41,7 +41,7 @@ async function seed() {
   ]);
 
   await SiteSettings.create({
-    brandName: "Nur Engineering Solution",
+    brandName: "NUR SHOP",
     tagline: "Machine, spare parts and Technical service provider",
     description:
       "EEE-led supplier of PLC, motors, drives, sensors, contactors and industrial spare parts — with technical service for workshops, factories and labs across Bangladesh.",
@@ -59,11 +59,11 @@ async function seed() {
     },
     seo: {
       defaultTitle:
-        "Nur Engineering Solution | Machine Parts & Technical Service",
+        "NUR SHOP | Machine Parts & Technical Service",
       defaultDescription:
         "Buy PLC, motors, VFD, sensors and industrial spare parts. Technical service from an EEE engineering desk in Bangladesh.",
       keywords: [
-        "Nur Engineering Solution",
+        "NUR SHOP",
         "PLC Bangladesh",
         "machine spare parts",
         "VFD drive",
@@ -596,10 +596,10 @@ async function seed() {
   });
 
   await CompanyProfile.create({
-    name: "Nur Engineering Solution",
+    name: "NUR SHOP",
     tagline: "Machine, spare parts and Technical service provider",
     about:
-      "Nur Engineering Solution is a Bangladesh-based machine parts and technical service desk founded by an Electrical and Electronic Engineering student. We sell PLC, motors, drives, sensors, contactors and workshop spare parts — and we help you pick the right substitute when the original part is gone.",
+      "NUR SHOP is a Bangladesh-based machine parts and technical service desk founded by an Electrical and Electronic Engineering student. We sell PLC, motors, drives, sensors, contactors and workshop spare parts — and we help you pick the right substitute when the original part is gone.",
     mission:
       "Supply accurate industrial parts with honest specs, clear prices, and EEE-backed selection help.",
     vision:
