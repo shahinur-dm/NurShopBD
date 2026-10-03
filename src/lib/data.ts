@@ -754,9 +754,7 @@ export const getProducts = reactCache(async function getProducts(opts?: {
         }
 
         let query = Product.find(filter)
-          .populate("category")
-          .populate("subCategory")
-          .populate("relatedServices")
+          .select("name slug sku brand category subCategory shortDescription price currency image inStock featured published order createdAt deliveryTime options variants")
           .sort({ order: 1, featured: -1, createdAt: -1 });
 
         if (opts?.page && opts?.limit) {
