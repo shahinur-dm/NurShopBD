@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Img } from "@/components/Img";
 import type { PopulatedProduct } from "@/lib/data";
 import { useOrderModal } from "@/components/OrderModal";
+import { useCart } from "@/components/CartContext";
 
 const TECH_ABBR = new Set([
   "PLC",
@@ -57,6 +58,7 @@ export function ProductCard({
   size?: "lg" | "md" | "sm";
 }) {
   const { openOrderModal } = useOrderModal();
+  const { addItem, openCart } = useCart();
 
   const aspect =
     size === "lg"
@@ -72,6 +74,25 @@ export function ProductCard({
     product.price !== null &&
     !isNaN(Number(product.price)) &&
     Number(product.price) > 0;
+
+  function handleOrderNowClick() {
+    if (hasPrice) {
+      addItem({
+        productId: product._id ? String(product._id) : undefined,
+        name: product.name,
+        slug: product.slug,
+        sku: product.sku,
+        image: product.image,
+        categoryName: category,
+        unitPrice: Number(product.price),
+        quantity: 1,
+        deliveryTime: product.deliveryTime || "2–3 Working Days",
+      });
+      openCart();
+    } else {
+      openOrderModal(product, "PRICE REQUEST");
+    }
+  }
 
   return (
     <div className="catalog-card group flex flex-col h-full bg-white border border-line rounded-[2px] shadow-xs hover:border-orange/60 hover:shadow-sm transition">
@@ -126,7 +147,7 @@ export function ProductCard({
           {/* ORDER NOW / ASK PRICE (Orange) */}
           <button
             type="button"
-            onClick={() => openOrderModal(product, hasPrice ? "ORDER" : "PRICE REQUEST")}
+            onClick={handleOrderNowClick}
             className="flex-1 min-w-0 inline-flex items-center justify-center bg-orange hover:bg-[#e05300] active:scale-95 text-white font-display font-bold uppercase tracking-[0.02em] text-[12px] sm:text-[13px] h-8 sm:h-9 px-1.5 sm:px-2 rounded-[2px] transition shadow-2xs text-center leading-none cursor-pointer"
             title={hasPrice ? `Order ${product.name} now` : `Ask price for ${product.name}`}
           >
@@ -146,3 +167,4 @@ export function ProductCard({
     </div>
   );
 }
+

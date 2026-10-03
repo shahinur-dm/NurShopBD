@@ -1,5 +1,17 @@
 import { Schema, models, model, type Types } from "mongoose";
 
+export interface IProductOption {
+  name: string;
+  values: string[];
+}
+
+export interface IProductVariant {
+  name: string;
+  sku?: string;
+  price?: number;
+  options?: Record<string, string>;
+}
+
 export interface IProduct {
   _id: Types.ObjectId | string;
   name: string;
@@ -25,6 +37,9 @@ export interface IProduct {
   warranty?: string;
   warrantyAndReturns?: string;
   availabilityText?: string;
+  deliveryTime?: string;
+  options?: IProductOption[];
+  variants?: IProductVariant[];
   relatedProducts?: (Types.ObjectId | string)[];
   relatedServices?: (Types.ObjectId | string)[];
   inStock: boolean;
@@ -69,6 +84,9 @@ const ProductSchema = new Schema<IProduct>(
     warranty: String,
     warrantyAndReturns: String,
     availabilityText: String,
+    deliveryTime: { type: String, default: "2–3 Working Days" },
+    options: [{ name: String, values: [String] }],
+    variants: [{ name: String, sku: String, price: Number, options: Schema.Types.Mixed }],
     relatedProducts: [{ type: Schema.Types.ObjectId, ref: "Product" }],
     relatedServices: [{ type: Schema.Types.ObjectId, ref: "Service" }],
     inStock: { type: Boolean, default: true },
@@ -83,5 +101,6 @@ ProductSchema.index({ name: "text", shortDescription: "text", sku: "text" });
 
 export const Product =
   models.Product || model<IProduct>("Product", ProductSchema);
+
 
 

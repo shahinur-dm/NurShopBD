@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { FormEvent, MouseEvent, useEffect, useRef, useState } from "react";
 import { useSite } from "@/components/SiteProvider";
+import { useCart } from "@/components/CartContext";
 import { Logo } from "@/components/Logo";
 import type { PopulatedProduct } from "@/lib/data";
 
@@ -20,6 +21,7 @@ export function NavBar() {
   const site = useSite();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { totalItems, openCart } = useCart();
 
   const [open, setOpen] = useState(false);
   const [casesOpen, setCasesOpen] = useState(false);
@@ -597,6 +599,57 @@ export function NavBar() {
               </div>
             )}
           </div>
+
+          {/* Desktop Cart Button */}
+          <button
+            type="button"
+            onClick={openCart}
+            className="relative hidden md:inline-flex h-[34px] md:h-[36px] items-center gap-1.5 rounded-[2px] bg-paper hover:bg-orange text-navy hover:text-white px-2.5 md:px-3 border border-line transition shrink-0 font-display text-xs font-bold uppercase tracking-wider shadow-2xs cursor-pointer group"
+            title={`Shopping Cart (${totalItems} items)`}
+            aria-label="Open shopping cart"
+          >
+            <div className="relative flex items-center">
+              <svg
+                viewBox="0 0 24 24"
+                className="h-4 w-4 fill-none stroke-current"
+                strokeWidth="2.2"
+              >
+                <circle cx="9" cy="21" r="1" />
+                <circle cx="20" cy="21" r="1" />
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+              </svg>
+              {totalItems > 0 && (
+                <span className="absolute -top-2 -right-2.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-orange group-hover:bg-navy text-[9.5px] font-extrabold text-white px-1 leading-none shadow-xs">
+                  {totalItems}
+                </span>
+              )}
+            </div>
+            <span className="hidden lg:inline">CART</span>
+          </button>
+
+          {/* Mobile Cart Button */}
+          <button
+            type="button"
+            onClick={openCart}
+            className="relative flex h-9 w-9 sm:h-10 sm:w-10 md:hidden shrink-0 cursor-pointer items-center justify-center rounded-full border border-line bg-paper text-navy hover:bg-orange hover:text-white shadow-xs transition"
+            aria-label="Open cart"
+            title={`Cart (${totalItems})`}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              className="h-4 w-4 fill-none stroke-current"
+              strokeWidth="2.2"
+            >
+              <circle cx="9" cy="21" r="1" />
+              <circle cx="20" cy="21" r="1" />
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+            </svg>
+            {totalItems > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-orange text-[9.5px] font-extrabold text-white px-1 leading-none shadow-xs">
+                {totalItems}
+              </span>
+            )}
+          </button>
 
           {/* Mobile Search Button */}
           <button

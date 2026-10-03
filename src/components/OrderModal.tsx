@@ -14,6 +14,8 @@ export interface OrderModalProduct {
   image?: string;
   price?: number;
   category?: { name?: string } | string;
+  variant?: string;
+  deliveryTime?: string;
 }
 
 interface OrderModalContextValue {
@@ -87,12 +89,15 @@ function OrderModalView({
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
+  const [deliveryLocation, setDeliveryLocation] = useState<"Dhaka" | "Outside Dhaka">("Dhaka");
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successData, setSuccessData] = useState<{
     orderId: string;
-    totalPrice?: number;
+    subtotal?: number;
+    deliveryCharge?: number;
+    grandTotal?: number;
   } | null>(null);
 
   const hasPrice =
@@ -102,7 +107,9 @@ function OrderModalView({
     Number(product.price) > 0;
 
   const unitPrice = hasPrice ? Number(product.price) : 0;
-  const totalPrice = unitPrice * quantity;
+  const subtotal = unitPrice * quantity;
+  const deliveryCharge = type === "ORDER" ? (deliveryLocation === "Outside Dhaka" ? 120 : 90) : 0;
+  const grandTotal = hasPrice ? subtotal + deliveryCharge : 0;
 
   const categoryName =
     typeof product.category === "object"
@@ -146,20 +153,31 @@ function OrderModalView({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           type,
-          productId: product._id ? String(product._id) : undefined,
-          productName: product.name,
-          productSlug: product.slug,
-          productSku: product.sku,
-          productImage: product.image,
-          productCategory: categoryName,
-          quantity,
-          unitPrice: hasPrice ? unitPrice : undefined,
-          totalPrice: hasPrice ? totalPrice : undefined,
+          deliveryLocation,
+          deliveryCharge: type === "ORDER" ? deliveryCharge : 0,
+          subtotal: hasPrice ? subtotal : undefined,
+          grandTotal: hasPrice ? grandTotal : undefined,
+          items: [
+            {
+              productId: product._id ? String(product._id) : undefined,
+              name: product.name,
+              slug: product.slug,
+              sku: product.sku,
+              image: product.image,
+              categoryName,
+              variant: product.variant,
+              quantity,
+              unitPrice: hasPrice ? unitPrice : undefined,
+              totalPrice: hasPrice ? subtotal : undefined,
+              deliveryTime: product.deliveryTime || "2–3 Working Days",
+            },
+          ],
           customer: {
             name: name.trim(),
             phone: phone.trim(),
             email: email.trim() || undefined,
             address: address.trim() || undefined,
+            deliveryLocation,
           },
           note: note.trim() || undefined,
         }),
@@ -172,7 +190,9 @@ function OrderModalView({
 
       setSuccessData({
         orderId: data.orderId,
-        totalPrice: hasPrice ? totalPrice : undefined,
+        subtotal: hasPrice ? subtotal : undefined,
+        deliveryCharge: type === "ORDER" ? deliveryCharge : undefined,
+        grandTotal: hasPrice ? grandTotal : undefined,
       });
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -205,7 +225,7 @@ function OrderModalView({
           <button
             type="button"
             onClick={onClose}
-            className="text-white/70 hover:text-white p-1 rounded transition hover:bg-white/10"
+            className="text-white/70 hover:text-white p-1 rounded transition hover:bg-white/10 cursor-pointer"
             aria-label="Close modal"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -243,15 +263,37 @@ function OrderModalView({
                   <span className="text-steel font-medium">Product:</span>
                   <span className="font-semibold text-navy truncate max-w-[200px]">{product.name}</span>
                 </div>
+                {product.variant && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-steel font-medium">Variant:</span>
+                    <span className="font-semibold text-orange">{product.variant}</span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center">
                   <span className="text-steel font-medium">Quantity:</span>
                   <span className="font-semibold text-navy">{quantity} unit(s)</span>
                 </div>
-                {successData.totalPrice !== undefined && (
+                {successData.subtotal !== undefined && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-steel font-medium">Subtotal:</span>
+                    <span className="font-semibold text-navy">
+                      ৳ {Math.round(successData.subtotal).toLocaleString("en-US")}
+                    </span>
+                  </div>
+                )}
+                {successData.deliveryCharge !== undefined && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-steel font-medium">Delivery Charge:</span>
+                    <span className="font-semibold text-navy">
+                      ৳ {Math.round(successData.deliveryCharge).toLocaleString("en-US")}
+                    </span>
+                  </div>
+                )}
+                {successData.grandTotal !== undefined && (
                   <div className="flex justify-between items-center border-t border-line pt-2">
-                    <span className="text-navy font-bold">Total Amount:</span>
-                    <span className="font-display font-bold text-navy text-sm">
-                      ৳ {Math.round(successData.totalPrice).toLocaleString("en-US")}
+                    <span className="text-navy font-bold">Grand Total:</span>
+                    <span className="font-display font-bold text-orange text-base">
+                      ৳ {Math.round(successData.grandTotal).toLocaleString("en-US")}
                     </span>
                   </div>
                 )}
@@ -278,7 +320,7 @@ function OrderModalView({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-5 py-2.5 bg-navy hover:bg-[#143049] text-white font-display text-xs font-bold uppercase tracking-wider rounded-[2px] transition"
+                  className="px-5 py-2.5 bg-navy hover:bg-[#143049] text-white font-display text-xs font-bold uppercase tracking-wider rounded-[2px] transition cursor-pointer"
                 >
                   Close
                 </button>
@@ -308,11 +350,18 @@ function OrderModalView({
                   <h4 className="text-xs sm:text-sm font-bold text-navy leading-snug line-clamp-2">
                     {product.name}
                   </h4>
-                  {product.sku && (
-                    <span className="text-[10px] text-steel font-mono block mt-0.5">
-                      SKU: {product.sku}
-                    </span>
-                  )}
+                  <div className="flex flex-wrap items-center gap-2 mt-0.5">
+                    {product.sku && (
+                      <span className="text-[10px] text-steel font-mono">
+                        SKU: {product.sku}
+                      </span>
+                    )}
+                    {product.variant && (
+                      <span className="text-[10px] text-orange font-semibold bg-orange/10 px-1.5 py-0.2 rounded">
+                        {product.variant}
+                      </span>
+                    )}
+                  </div>
                   {hasPrice ? (
                     <div className="mt-1 flex items-baseline gap-1.5">
                       <span className="font-display text-sm sm:text-base font-extrabold text-navy">
@@ -330,7 +379,7 @@ function OrderModalView({
                 </div>
               </div>
 
-              {/* Quantity Picker & Total */}
+              {/* Quantity Picker & Subtotal */}
               <div className="flex items-center justify-between bg-white border border-line p-2.5 rounded-[2px]">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-semibold text-navy">Quantity:</span>
@@ -338,7 +387,7 @@ function OrderModalView({
                     <button
                       type="button"
                       onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                      className="px-2.5 py-1 text-xs font-bold text-navy hover:bg-white transition"
+                      className="px-2.5 py-1 text-xs font-bold text-navy hover:bg-white transition cursor-pointer"
                     >
                       -
                     </button>
@@ -348,7 +397,7 @@ function OrderModalView({
                     <button
                       type="button"
                       onClick={() => setQuantity((q) => q + 1)}
-                      className="px-2.5 py-1 text-xs font-bold text-navy hover:bg-white transition"
+                      className="px-2.5 py-1 text-xs font-bold text-navy hover:bg-white transition cursor-pointer"
                     >
                       +
                     </button>
@@ -357,13 +406,62 @@ function OrderModalView({
 
                 {hasPrice && (
                   <div className="text-right">
-                    <span className="text-[10px] text-steel block">Estimated Subtotal:</span>
-                    <span className="font-display text-base sm:text-lg font-extrabold text-orange">
-                      ৳ {Math.round(totalPrice).toLocaleString("en-US")}
+                    <span className="text-[10px] text-steel block">Subtotal:</span>
+                    <span className="font-display text-sm sm:text-base font-extrabold text-navy">
+                      ৳ {Math.round(subtotal).toLocaleString("en-US")}
                     </span>
                   </div>
                 )}
               </div>
+
+              {/* Delivery Location Selection (Only for Orders) */}
+              {type === "ORDER" && (
+                <div className="rounded-[2px] bg-paper/50 border border-line p-2.5 space-y-1.5">
+                  <span className="block text-xs font-bold text-navy uppercase tracking-wider">
+                    Delivery Region:
+                  </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setDeliveryLocation("Dhaka")}
+                      className={`p-2 rounded-[2px] border text-left transition cursor-pointer ${
+                        deliveryLocation === "Dhaka"
+                          ? "border-orange bg-orange/5 font-bold ring-1 ring-orange"
+                          : "border-line bg-white text-steel hover:border-slate-300"
+                      }`}
+                    >
+                      <div className="flex justify-between items-center text-xs text-navy">
+                        <span>Inside Dhaka</span>
+                        <span className="text-orange font-bold font-display">৳90</span>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setDeliveryLocation("Outside Dhaka")}
+                      className={`p-2 rounded-[2px] border text-left transition cursor-pointer ${
+                        deliveryLocation === "Outside Dhaka"
+                          ? "border-orange bg-orange/5 font-bold ring-1 ring-orange"
+                          : "border-line bg-white text-steel hover:border-slate-300"
+                      }`}
+                    >
+                      <div className="flex justify-between items-center text-xs text-navy">
+                        <span>Outside Dhaka</span>
+                        <span className="text-orange font-bold font-display">৳120</span>
+                      </div>
+                    </button>
+                  </div>
+
+                  {hasPrice && (
+                    <div className="flex justify-between items-center pt-1.5 border-t border-line text-xs font-bold text-navy">
+                      <span>Grand Total:</span>
+                      <span className="font-display font-extrabold text-orange text-base">
+                        ৳ {Math.round(grandTotal).toLocaleString("en-US")}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Customer Form Inputs */}
               <div className="space-y-3 pt-1">
@@ -466,7 +564,7 @@ function OrderModalView({
                   type="button"
                   onClick={onClose}
                   disabled={submitting}
-                  className="px-4 py-2.5 bg-paper hover:bg-slate-200 text-navy font-display text-xs font-bold uppercase tracking-wider rounded-[2px] transition"
+                  className="px-4 py-2.5 bg-paper hover:bg-slate-200 text-navy font-display text-xs font-bold uppercase tracking-wider rounded-[2px] transition cursor-pointer"
                 >
                   Cancel
                 </button>

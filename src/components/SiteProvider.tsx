@@ -3,6 +3,8 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 import type { ISiteSettings, IUseCase } from "@/lib/models";
 import { OrderModalProvider } from "@/components/OrderModal";
+import { CartProvider } from "@/components/CartContext";
+import { CartDrawer } from "@/components/CartDrawer";
 
 type SiteContextValue = {
   settings: ISiteSettings;
@@ -69,12 +71,16 @@ export function SiteProvider({
 
   return (
     <SiteContext.Provider value={{ settings, useCases }}>
-      <OrderModalProvider>
-        {children}
-      </OrderModalProvider>
+      <CartProvider>
+        <OrderModalProvider>
+          {children}
+          <CartDrawer />
+        </OrderModalProvider>
+      </CartProvider>
     </SiteContext.Provider>
   );
 }
+
 
 export function useSite() {
   const ctx = useContext(SiteContext);

@@ -10,11 +10,35 @@ import {
 } from "@/components/admin/AdminIcons";
 import type { OrderType, OrderStatus } from "@/lib/models/Order";
 
-interface OrderItem {
+interface OrderProductItem {
+  _id?: string;
+  productId?: string;
+  id?: string;
+  name: string;
+  slug: string;
+  sku?: string;
+  image?: string;
+  categoryName?: string;
+  variant?: string;
+  selectedOptions?: Record<string, string>;
+  quantity: number;
+  unitPrice?: number;
+  totalPrice?: number;
+  deliveryTime?: string;
+}
+
+interface OrderRecord {
   _id: string;
   orderId: string;
   type: OrderType;
-  product: {
+  items?: OrderProductItem[];
+  subtotal?: number;
+  deliveryCharge?: number;
+  deliveryLocation?: string;
+  grandTotal?: number;
+  currency?: string;
+  // Legacy single product fields fallback
+  product?: {
     _id?: string;
     id?: string;
     name: string;
@@ -23,15 +47,15 @@ interface OrderItem {
     image?: string;
     categoryName?: string;
   };
-  quantity: number;
+  quantity?: number;
   unitPrice?: number;
   totalPrice?: number;
-  currency?: string;
   customer: {
     name: string;
     phone: string;
     email?: string;
     address?: string;
+    deliveryLocation?: string;
   };
   note?: string;
   status: OrderStatus;
@@ -59,7 +83,7 @@ const ALL_STATUSES: OrderStatus[] = [
 ];
 
 export default function AdminOrdersPage() {
-  const [orders, setOrders] = useState<OrderItem[]>([]);
+  const [orders, setOrders] = useState<OrderRecord[]>([]);
   const [summary, setSummary] = useState<OrderSummary>({
     total: 0,
     pendingCount: 0,
@@ -72,10 +96,12 @@ export default function AdminOrdersPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [selectedOrder, setSelectedOrder] = useState<OrderItem | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<OrderRecord | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [adminNoteEdit, setAdminNoteEdit] = useState("");
+  const [deliveryChargeEdit, setDeliveryChargeEdit] = useState<string>("");
+  const [updatingDeliveryCharge, setUpdatingDeliveryCharge] = useState(false);
 
   const fetchOrders = useCallback(async () => {
     try {
@@ -157,6 +183,38 @@ export default function AdminOrdersPage() {
     }
   }
 
+  async function handleSaveDeliveryCharge(id: string) {
+    const numCharge = Number(deliveryChargeEdit);
+    if (isNaN(numCharge) || numCharge < 0) {
+      alert("Please enter a valid non-negative delivery charge amount.");
+      return;
+    }
+
+    try {
+      setUpdatingDeliveryCharge(true);
+      const res = await fetch(`/api/admin/orders/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deliveryCharge: numCharge }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.order) {
+          setOrders((prev) =>
+            prev.map((o) => (o._id === id ? { ...o, ...data.order } : o))
+          );
+          if (selectedOrder && selectedOrder._id === id) {
+            setSelectedOrder({ ...selectedOrder, ...data.order });
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Failed to update delivery charge:", err);
+    } finally {
+      setUpdatingDeliveryCharge(false);
+    }
+  }
+
   async function handleDelete(id: string, orderId: string) {
     if (!confirm(`Are you sure you want to delete order ${orderId}? This cannot be undone.`)) {
       return;
@@ -177,10 +235,36 @@ export default function AdminOrdersPage() {
     }
   }
 
-  function openDetailModal(order: OrderItem) {
+  function openDetailModal(order: OrderRecord) {
     setSelectedOrder(order);
     setAdminNoteEdit(order.adminNotes || "");
+    setDeliveryChargeEdit(
+      order.deliveryCharge !== undefined ? String(order.deliveryCharge) : "0"
+    );
     setModalOpen(true);
+  }
+
+  function getNormalizedItems(order: OrderRecord): OrderProductItem[] {
+    if (Array.isArray(order.items) && order.items.length > 0) {
+      return order.items;
+    }
+    if (order.product) {
+      return [
+        {
+          productId: order.product._id || order.product.id,
+          name: order.product.name,
+          slug: order.product.slug,
+          sku: order.product.sku,
+          image: order.product.image,
+          categoryName: order.product.categoryName,
+          quantity: order.quantity || 1,
+          unitPrice: order.unitPrice,
+          totalPrice: order.totalPrice || (order.unitPrice ? order.unitPrice * (order.quantity || 1) : undefined),
+          deliveryTime: "2–3 Working Days",
+        },
+      ];
+    }
+    return [];
   }
 
   function getStatusBadge(status: OrderStatus) {
@@ -222,7 +306,7 @@ export default function AdminOrdersPage() {
         <button
           type="button"
           onClick={() => fetchOrders()}
-          className="inline-flex items-center gap-2 rounded bg-navy px-3.5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-[#143049] transition w-fit"
+          className="inline-flex items-center gap-2 rounded bg-navy px-3.5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-[#143049] transition w-fit cursor-pointer"
         >
           <svg className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -276,7 +360,7 @@ export default function AdminOrdersPage() {
               setTypeFilter(e.target.value);
               setPage(1);
             }}
-            className="rounded border border-line px-3 py-2 text-xs text-ink bg-white focus:border-orange focus:outline-hidden"
+            className="rounded border border-line px-3 py-2 text-xs text-ink bg-white focus:border-orange focus:outline-hidden cursor-pointer"
           >
             <option value="all">All Types</option>
             <option value="ORDER">Direct Orders</option>
@@ -290,7 +374,7 @@ export default function AdminOrdersPage() {
               setStatusFilter(e.target.value);
               setPage(1);
             }}
-            className="rounded border border-line px-3 py-2 text-xs text-ink bg-white focus:border-orange focus:outline-hidden"
+            className="rounded border border-line px-3 py-2 text-xs text-ink bg-white focus:border-orange focus:outline-hidden cursor-pointer"
           >
             <option value="all">All Statuses</option>
             {ALL_STATUSES.map((st) => (
@@ -342,6 +426,16 @@ export default function AdminOrdersPage() {
                 </tr>
               ) : (
                 orders.map((order) => {
+                  const items = getNormalizedItems(order);
+                  const firstItem = items[0] || { name: "Product", slug: "#" };
+                  const totalUnits = items.reduce((sum, it) => sum + (it.quantity || 1), 0);
+                  const grandTotalVal =
+                    order.grandTotal !== undefined && order.grandTotal > 0
+                      ? order.grandTotal
+                      : order.totalPrice !== undefined && order.totalPrice > 0
+                      ? order.totalPrice
+                      : undefined;
+
                   const dateStr = new Date(order.createdAt).toLocaleDateString("en-GB", {
                     day: "2-digit",
                     month: "short",
@@ -380,33 +474,40 @@ export default function AdminOrdersPage() {
                         </span>
                       </td>
 
-                      {/* Product */}
+                      {/* Product (Multi-item support) */}
                       <td className="py-3 px-3.5 align-top max-w-[220px]">
                         <div className="flex items-start gap-2.5">
-                          {order.product.image && (
+                          {firstItem.image && (
                             <div className="relative w-9 h-9 rounded bg-paper shrink-0 overflow-hidden border border-line">
                               <Img
-                                src={order.product.image}
-                                alt={order.product.name}
+                                src={firstItem.image}
+                                alt={firstItem.name}
                                 fill
                                 className="object-cover"
                               />
                             </div>
                           )}
-                          <div className="min-w-0">
+                          <div className="min-w-0 flex-1">
                             <Link
-                              href={`/products/${order.product.slug}`}
+                              href={`/products/${firstItem.slug}`}
                               target="_blank"
                               className="font-semibold text-navy hover:text-orange transition line-clamp-1 text-xs"
-                              title={order.product.name}
+                              title={firstItem.name}
                             >
-                              {order.product.name}
+                              {firstItem.name}
                             </Link>
-                            {order.product.sku && (
-                              <span className="text-[10px] font-mono text-mist block">
-                                SKU: {order.product.sku}
-                              </span>
-                            )}
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              {firstItem.sku && (
+                                <span className="text-[10px] font-mono text-mist">
+                                  SKU: {firstItem.sku}
+                                </span>
+                              )}
+                              {items.length > 1 && (
+                                <span className="inline-block px-1.5 py-0.2 rounded bg-navy/10 text-navy font-bold text-[9.5px]">
+                                  +{items.length - 1} more item{items.length - 1 > 1 ? "s" : ""}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </td>
@@ -444,10 +545,13 @@ export default function AdminOrdersPage() {
 
                       {/* Qty & Amount */}
                       <td className="py-3 px-3.5 align-top text-right whitespace-nowrap">
-                        <span className="font-semibold text-navy block">{order.quantity} unit{order.quantity > 1 ? "s" : ""}</span>
-                        {order.totalPrice !== undefined && order.totalPrice > 0 ? (
+                        <span className="font-semibold text-navy block">
+                          {totalUnits} unit{totalUnits > 1 ? "s" : ""}
+                          {items.length > 1 ? ` (${items.length} items)` : ""}
+                        </span>
+                        {grandTotalVal !== undefined && grandTotalVal > 0 ? (
                           <span className="font-display font-extrabold text-navy text-sm">
-                            ৳ {Math.round(order.totalPrice).toLocaleString("en-US")}
+                            ৳ {Math.round(grandTotalVal).toLocaleString("en-US")}
                           </span>
                         ) : (
                           <span className="text-[10px] text-amber-700 bg-amber-50 px-1 py-0.5 rounded">
@@ -480,14 +584,14 @@ export default function AdminOrdersPage() {
                           <button
                             type="button"
                             onClick={() => openDetailModal(order)}
-                            className="rounded bg-paper hover:bg-slate-200 px-2.5 py-1 text-[11px] font-bold text-navy transition"
+                            className="rounded bg-paper hover:bg-slate-200 px-2.5 py-1 text-[11px] font-bold text-navy transition cursor-pointer"
                           >
                             Details
                           </button>
                           <button
                             type="button"
                             onClick={() => handleDelete(order._id, order.orderId)}
-                            className="rounded p-1 text-mist hover:bg-red-50 hover:text-red-600 transition"
+                            className="rounded p-1 text-mist hover:bg-red-50 hover:text-red-600 transition cursor-pointer"
                             title="Delete order"
                           >
                             <TrashIcon size={15} />
@@ -513,7 +617,7 @@ export default function AdminOrdersPage() {
                 type="button"
                 disabled={page <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="rounded border border-line bg-white px-2.5 py-1 font-semibold text-navy hover:bg-paper disabled:opacity-40 transition"
+                className="rounded border border-line bg-white px-2.5 py-1 font-semibold text-navy hover:bg-paper disabled:opacity-40 transition cursor-pointer"
               >
                 Previous
               </button>
@@ -521,7 +625,7 @@ export default function AdminOrdersPage() {
                 type="button"
                 disabled={page >= totalPages}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                className="rounded border border-line bg-white px-2.5 py-1 font-semibold text-navy hover:bg-paper disabled:opacity-40 transition"
+                className="rounded border border-line bg-white px-2.5 py-1 font-semibold text-navy hover:bg-paper disabled:opacity-40 transition cursor-pointer"
               >
                 Next
               </button>
@@ -554,7 +658,7 @@ export default function AdminOrdersPage() {
               <button
                 type="button"
                 onClick={() => setModalOpen(false)}
-                className="text-white/70 hover:text-white p-1 rounded transition hover:bg-white/10"
+                className="text-white/70 hover:text-white p-1 rounded transition hover:bg-white/10 cursor-pointer"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -564,36 +668,119 @@ export default function AdminOrdersPage() {
 
             {/* Modal Content */}
             <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-5">
-              {/* Product Overview Box */}
-              <div className="p-3.5 bg-paper rounded-[2px] border border-line flex items-start gap-4">
-                {selectedOrder.product.image && (
-                  <div className="relative w-16 h-16 rounded bg-white shrink-0 overflow-hidden border border-line">
-                    <Img
-                      src={selectedOrder.product.image}
-                      alt={selectedOrder.product.name}
-                      fill
-                      className="object-cover"
-                    />
+              {/* Product Overview Box (All Items In Order) */}
+              <div className="space-y-2.5">
+                <h4 className="font-bold text-navy uppercase text-[11px] tracking-wider border-b border-line pb-1">
+                  Ordered Products ({getNormalizedItems(selectedOrder).length})
+                </h4>
+
+                <div className="space-y-2.5">
+                  {getNormalizedItems(selectedOrder).map((item, idx) => (
+                    <div
+                      key={item._id || item.id || idx}
+                      className="p-3 bg-paper rounded-[2px] border border-line flex items-start gap-3.5"
+                    >
+                      {item.image && (
+                        <div className="relative w-14 h-14 rounded bg-white shrink-0 overflow-hidden border border-line">
+                          <Img
+                            src={item.image}
+                            alt={item.name}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        {item.categoryName && (
+                          <span className="text-[10px] font-bold text-orange uppercase tracking-wider block">
+                            {item.categoryName}
+                          </span>
+                        )}
+                        <Link
+                          href={`/products/${item.slug}`}
+                          target="_blank"
+                          className="font-bold text-navy hover:text-orange text-xs sm:text-sm leading-snug transition block"
+                        >
+                          {item.name}
+                        </Link>
+                        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-mist">
+                          {item.sku && (
+                            <span className="font-mono text-[11px]">SKU: {item.sku}</span>
+                          )}
+                          {item.variant && (
+                            <span className="bg-orange/10 text-orange font-semibold px-1.5 py-0.2 rounded text-[10.5px]">
+                              {item.variant}
+                            </span>
+                          )}
+                          {item.deliveryTime && (
+                            <span className="text-emerald-700 font-medium text-[11px]">
+                              🕒 {item.deliveryTime}
+                            </span>
+                          )}
+                          <span>Qty: <strong className="text-navy">{item.quantity}</strong></span>
+                          {item.unitPrice ? (
+                            <span>Unit: <strong className="text-navy">৳ {Math.round(item.unitPrice).toLocaleString("en-US")}</strong></span>
+                          ) : null}
+                          {item.totalPrice ? (
+                            <span>Item Total: <strong className="text-orange">৳ {Math.round(item.totalPrice).toLocaleString("en-US")}</strong></span>
+                          ) : null}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Order Financial Calculation Box with Admin Delivery Charge Override */}
+              <div className="rounded border border-line p-3.5 space-y-2 bg-paper/40 text-xs">
+                <h4 className="font-bold text-navy uppercase text-[11px] tracking-wider border-b border-line pb-1.5">
+                  Order Summary & Delivery Calculation
+                </h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                  {/* Subtotal */}
+                  <div className="bg-white p-2.5 rounded border border-line">
+                    <span className="text-mist block text-[10.5px] uppercase font-bold">Subtotal:</span>
+                    <span className="font-display font-extrabold text-navy text-base mt-0.5 block">
+                      ৳ {Math.round(selectedOrder.subtotal ?? (selectedOrder.totalPrice ?? 0)).toLocaleString("en-US")}
+                    </span>
                   </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <span className="text-[10px] font-bold text-orange uppercase tracking-wider block">
-                    {selectedOrder.product.categoryName || "Product"}
-                  </span>
-                  <h3 className="font-bold text-navy text-sm sm:text-base leading-snug">
-                    {selectedOrder.product.name}
-                  </h3>
-                  <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-mist">
-                    {selectedOrder.product.sku && (
-                      <span className="font-mono">SKU: {selectedOrder.product.sku}</span>
-                    )}
-                    <span>Quantity: <strong className="text-navy">{selectedOrder.quantity}</strong></span>
-                    {selectedOrder.unitPrice ? (
-                      <span>Unit: <strong className="text-navy">৳ {Math.round(selectedOrder.unitPrice).toLocaleString("en-US")}</strong></span>
-                    ) : null}
-                    {selectedOrder.totalPrice ? (
-                      <span>Total: <strong className="text-orange text-sm">৳ {Math.round(selectedOrder.totalPrice).toLocaleString("en-US")}</strong></span>
-                    ) : null}
+
+                  {/* Delivery Location & Editable Delivery Charge */}
+                  <div className="bg-white p-2.5 rounded border border-line">
+                    <div className="flex items-center justify-between">
+                      <span className="text-mist text-[10.5px] uppercase font-bold">Delivery ({selectedOrder.deliveryLocation || "Dhaka"}):</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <span className="font-display font-bold text-navy text-xs">৳</span>
+                      <input
+                        type="number"
+                        min="0"
+                        value={deliveryChargeEdit}
+                        onChange={(e) => setDeliveryChargeEdit(e.target.value)}
+                        className="w-20 rounded border border-line px-2 py-0.5 text-xs font-bold text-navy focus:border-orange focus:outline-hidden"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleSaveDeliveryCharge(selectedOrder._id)}
+                        disabled={updatingDeliveryCharge}
+                        className="rounded bg-navy hover:bg-[#143049] text-white px-2 py-1 text-[10px] font-bold uppercase transition disabled:opacity-50 cursor-pointer"
+                        title="Override delivery charge for this order"
+                      >
+                        {updatingDeliveryCharge ? "..." : "Save"}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Grand Total */}
+                  <div className="bg-orange/5 p-2.5 rounded border border-orange/30">
+                    <span className="text-orange block text-[10.5px] uppercase font-bold">Grand Total:</span>
+                    <span className="font-display font-extrabold text-orange text-lg mt-0.5 block">
+                      ৳ {Math.round(
+                        selectedOrder.grandTotal ??
+                          ((selectedOrder.subtotal ?? selectedOrder.totalPrice ?? 0) + (selectedOrder.deliveryCharge ?? 0))
+                      ).toLocaleString("en-US")}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -645,6 +832,11 @@ export default function AdminOrdersPage() {
                     <div>
                       <span className="text-mist block text-[10.5px]">Delivery Address:</span>
                       <span className="text-navy leading-relaxed">{selectedOrder.customer.address}</span>
+                      {selectedOrder.deliveryLocation && (
+                        <span className="block mt-0.5 text-[10.5px] font-semibold text-orange">
+                          Region: {selectedOrder.deliveryLocation}
+                        </span>
+                      )}
                     </div>
                   )}
                 </div>
@@ -660,7 +852,7 @@ export default function AdminOrdersPage() {
                       value={selectedOrder.status}
                       onChange={(e) => handleStatusChange(selectedOrder._id, e.target.value as OrderStatus)}
                       disabled={updatingStatus}
-                      className={`w-full rounded border px-3 py-1.5 text-xs font-bold focus:outline-hidden ${getStatusBadge(
+                      className={`w-full rounded border px-3 py-1.5 text-xs font-bold focus:outline-hidden cursor-pointer ${getStatusBadge(
                         selectedOrder.status
                       )}`}
                     >
@@ -715,7 +907,7 @@ export default function AdminOrdersPage() {
                     type="button"
                     onClick={() => handleSaveAdminNote(selectedOrder._id)}
                     disabled={updatingStatus}
-                    className="rounded bg-navy hover:bg-[#143049] text-white px-3.5 py-1.5 font-bold uppercase text-[10.5px] tracking-wider transition disabled:opacity-50"
+                    className="rounded bg-navy hover:bg-[#143049] text-white px-3.5 py-1.5 font-bold uppercase text-[10.5px] tracking-wider transition disabled:opacity-50 cursor-pointer"
                   >
                     Save Notes
                   </button>
@@ -728,7 +920,7 @@ export default function AdminOrdersPage() {
               <button
                 type="button"
                 onClick={() => handleDelete(selectedOrder._id, selectedOrder.orderId)}
-                className="text-red-600 hover:text-red-700 font-bold text-xs transition inline-flex items-center gap-1.5"
+                className="text-red-600 hover:text-red-700 font-bold text-xs transition inline-flex items-center gap-1.5 cursor-pointer"
               >
                 <TrashIcon size={15} />
                 <span>Delete Order</span>
@@ -738,7 +930,7 @@ export default function AdminOrdersPage() {
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="rounded bg-navy hover:bg-[#143049] text-white px-4 py-2 font-display text-xs font-bold uppercase tracking-wider transition"
+                  className="rounded bg-navy hover:bg-[#143049] text-white px-4 py-2 font-display text-xs font-bold uppercase tracking-wider transition cursor-pointer"
                 >
                   Close
                 </button>

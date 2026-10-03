@@ -49,6 +49,8 @@ interface ProductFormProps {
     warranty?: string;
     warrantyAndReturns?: string;
     availabilityText?: string;
+    deliveryTime?: string;
+    options?: Array<{ name: string; values: string[] }>;
     inStock: boolean;
     featured: boolean;
     published: boolean;
@@ -98,6 +100,13 @@ export function ProductForm({ initialData, isEdit }: ProductFormProps) {
   const [specs, setSpecs] = useState<string[]>(initialData?.specs || []);
   const [specInput, setSpecInput] = useState("");
 
+  // Product Options & Variants (e.g. Color, Voltage, Size, Model)
+  const [options, setOptions] = useState<Array<{ name: string; values: string[] }>>(
+    initialData?.options || []
+  );
+  const [optNameInput, setOptNameInput] = useState("");
+  const [optValuesInput, setOptValuesInput] = useState("");
+
   // At a Glance
   const [atAGlance, setAtAGlance] = useState<KeyValueRow[]>(
     initialData?.atAGlance || []
@@ -117,7 +126,7 @@ export function ProductForm({ initialData, isEdit }: ProductFormProps) {
   );
   const [beforeOrderInput, setBeforeOrderInput] = useState("");
 
-  // Warranty, Condition, Packing, Availability
+  // Warranty, Condition, Packing, Availability, Delivery Time
   const [warranty, setWarranty] = useState(
     initialData?.warranty || "12-month manufacturer warranty"
   );
@@ -127,6 +136,9 @@ export function ProductForm({ initialData, isEdit }: ProductFormProps) {
   const [packing, setPacking] = useState(initialData?.packing || "Carton");
   const [availabilityText, setAvailabilityText] = useState(
     initialData?.availabilityText || "In stock – confirm lead time"
+  );
+  const [deliveryTime, setDeliveryTime] = useState(
+    initialData?.deliveryTime || "2–3 Working Days"
   );
   const [warrantyAndReturns, setWarrantyAndReturns] = useState(
     initialData?.warrantyAndReturns || ""
@@ -300,6 +312,25 @@ export function ProductForm({ initialData, isEdit }: ProductFormProps) {
     setBeforeYouOrder(beforeYouOrder.filter((_, i) => i !== index));
   }
 
+  // Options & Variants handlers
+  function handleAddOption() {
+    if (optNameInput.trim() && optValuesInput.trim()) {
+      const vals = optValuesInput
+        .split(",")
+        .map((v) => v.trim())
+        .filter(Boolean);
+      if (vals.length > 0) {
+        setOptions([...options, { name: optNameInput.trim(), values: vals }]);
+        setOptNameInput("");
+        setOptValuesInput("");
+      }
+    }
+  }
+
+  function handleRemoveOption(index: number) {
+    setOptions(options.filter((_, i) => i !== index));
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -334,6 +365,7 @@ export function ProductForm({ initialData, isEdit }: ProductFormProps) {
         specs,
         specTable,
         atAGlance,
+        options,
         includedItems,
         beforeYouOrder,
         condition,
@@ -341,6 +373,7 @@ export function ProductForm({ initialData, isEdit }: ProductFormProps) {
         warranty,
         warrantyAndReturns,
         availabilityText,
+        deliveryTime: deliveryTime || "2–3 Working Days",
         inStock,
         featured,
         published,
@@ -759,6 +792,80 @@ export function ProductForm({ initialData, isEdit }: ProductFormProps) {
             )}
           </div>
 
+          {/* Product Options & Variants Section Builder */}
+          <div className="rounded-lg border border-line bg-white p-4 sm:p-5 shadow-xs space-y-4">
+            <div className="border-b border-line pb-3">
+              <h3 className="font-display text-sm font-bold uppercase tracking-wider text-navy">
+                Product Options & Variants (Optional)
+              </h3>
+              <p className="text-[11px] text-steel">
+                Allow customers to select variations before adding to cart (e.g. Size: 7-inch, 10-inch | Color: Black, Silver | Voltage: 24V DC, 220V AC).
+              </p>
+            </div>
+
+            <div className="grid gap-2 sm:grid-cols-[1fr_2fr_auto]">
+              <input
+                type="text"
+                placeholder="Option Name (e.g. Size or Color)"
+                value={optNameInput}
+                onChange={(e) => setOptNameInput(e.target.value)}
+                className="rounded border border-line px-3 py-2 text-xs outline-none focus:border-orange"
+              />
+              <input
+                type="text"
+                placeholder="Values comma-separated (e.g. 7-inch, 10-inch, 15-inch)"
+                value={optValuesInput}
+                onChange={(e) => setOptValuesInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddOption();
+                  }
+                }}
+                className="rounded border border-line px-3 py-2 text-xs outline-none focus:border-orange"
+              />
+              <button
+                type="button"
+                onClick={handleAddOption}
+                className="btn-orange px-4 py-2 text-xs font-bold uppercase cursor-pointer"
+              >
+                + Add
+              </button>
+            </div>
+
+            {options.length > 0 && (
+              <div className="overflow-x-auto border border-line">
+                <table className="w-full text-left text-xs border-collapse">
+                  <tbody className="divide-y divide-line">
+                    {options.map((opt, i) => (
+                      <tr key={i} className="hover:bg-paper/30">
+                        <td className="py-2 px-3 font-bold text-navy w-1/3">{opt.name}</td>
+                        <td className="py-2 px-3 font-medium text-steel w-2/3">
+                          <div className="flex flex-wrap gap-1">
+                            {opt.values.map((v, vIdx) => (
+                              <span key={vIdx} className="bg-paper border border-line px-2 py-0.5 rounded text-[11px] text-navy font-semibold">
+                                {v}
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="py-2 px-3 text-right">
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveOption(i)}
+                            className="text-red-500 hover:text-red-700 font-bold px-2 py-1 text-xs cursor-pointer"
+                          >
+                            ✕
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
           {/* In the Pack & Before You Order */}
           <div className="grid gap-6 sm:grid-cols-2">
             {/* In the Pack */}
@@ -894,7 +1001,7 @@ export function ProductForm({ initialData, isEdit }: ProductFormProps) {
               </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-3">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-navy">
                   Warranty Summary
@@ -910,7 +1017,20 @@ export function ProductForm({ initialData, isEdit }: ProductFormProps) {
 
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-navy">
-                  Availability / Lead Time Note
+                  Estimated Delivery Time
+                </label>
+                <input
+                  type="text"
+                  value={deliveryTime}
+                  onChange={(e) => setDeliveryTime(e.target.value)}
+                  placeholder="e.g. 2–3 Working Days / Available Today"
+                  className="mt-1 w-full rounded border border-line px-3 py-2 text-xs outline-none focus:border-orange"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-navy">
+                  Availability Note
                 </label>
                 <input
                   type="text"

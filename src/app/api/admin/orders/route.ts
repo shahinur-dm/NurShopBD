@@ -34,6 +34,8 @@ export async function GET(req: Request) {
         { "customer.email": { $regex: q, $options: "i" } },
         { "product.name": { $regex: q, $options: "i" } },
         { "product.sku": { $regex: q, $options: "i" } },
+        { "items.name": { $regex: q, $options: "i" } },
+        { "items.sku": { $regex: q, $options: "i" } },
       ];
     }
 
@@ -45,7 +47,7 @@ export async function GET(req: Request) {
       filter.type = type;
     }
 
-    const [items, total, pendingCount, orderCount, inquiryCount] = await Promise.all([
+    const [rawItems, total, pendingCount, orderCount, inquiryCount] = await Promise.all([
       Order.find(filter)
         .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
@@ -56,6 +58,54 @@ export async function GET(req: Request) {
       Order.countDocuments({ type: "ORDER" }),
       Order.countDocuments({ type: "PRICE REQUEST" }),
     ]);
+
+    // Normalize legacy orders for safe display
+    const items = rawItems.map((order: Record<string, unknown>) => {
+      let orderItems = Array.isArray(order.items) && order.items.length > 0 ? order.items : [];
+      if (orderItems.length === 0 && order.product) {
+        const prod = order.product as Record<string, unknown>;
+        const singleQty = Number(order.quantity) || 1;
+        const singleUnit = Number(order.unitPrice) || 0;
+        const singleTotal = Number(order.totalPrice) || singleUnit * singleQty;
+        orderItems = [
+          {
+            productId: prod._id || prod.id,
+            name: prod.name || "Product",
+            slug: prod.slug || "",
+            sku: prod.sku || "",
+            image: prod.image || "",
+            categoryName: prod.categoryName || "",
+            quantity: singleQty,
+            unitPrice: singleUnit > 0 ? singleUnit : undefined,
+            totalPrice: singleTotal > 0 ? singleTotal : undefined,
+            deliveryTime: "2–3 Working Days",
+          },
+        ];
+      }
+
+      const calculatedSubtotal =
+        order.subtotal !== undefined && order.subtotal !== null
+          ? Number(order.subtotal)
+          : orderItems.reduce(
+              (sum: number, it: { totalPrice?: number; unitPrice?: number; quantity?: number }) =>
+                sum + (it.totalPrice || (it.unitPrice ? it.unitPrice * (it.quantity || 1) : 0)),
+              0
+            );
+
+      const deliveryCharge = Number(order.deliveryCharge) || 0;
+      const calculatedGrandTotal =
+        order.grandTotal !== undefined && order.grandTotal !== null
+          ? Number(order.grandTotal)
+          : calculatedSubtotal + deliveryCharge;
+
+      return {
+        ...order,
+        items: orderItems,
+        subtotal: calculatedSubtotal,
+        deliveryCharge,
+        grandTotal: calculatedGrandTotal > 0 ? calculatedGrandTotal : calculatedSubtotal,
+      };
+    });
 
     return NextResponse.json({
       items,
@@ -80,3 +130,4 @@ export async function GET(req: Request) {
     );
   }
 }
+

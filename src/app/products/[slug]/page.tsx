@@ -77,6 +77,7 @@ export default async function ProductDetailPage({
       product.availabilityText ||
         (product.inStock ? "In stock – confirm lead time" : "Made to order"),
     ],
+    ["Delivery time", product.deliveryTime || "2–3 Working Days"],
     ["Condition", product.condition || extra?.condition || "As quoted"],
     ["Packing", product.packing || extra?.packing || "Carton"],
     ["Warranty", product.warranty || extra?.warranty || "As quoted"],
