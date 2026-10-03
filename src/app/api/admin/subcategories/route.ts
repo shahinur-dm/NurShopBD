@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import mongoose from "mongoose";
 import { connectDB } from "@/lib/mongodb";
+import { invalidateCache } from "@/lib/cache";
 import { SubCategory, Category, type ICategory } from "@/lib/models";
 import { getCurrentAdminUser, logActivity } from "@/lib/auth";
 
@@ -129,6 +130,7 @@ export async function POST(req: Request) {
     } catch {
       // ignore
     }
+    invalidateCache();
 
     return NextResponse.json({ success: true, subcategory: sub });
   } catch (err: unknown) {

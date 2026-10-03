@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { connectDB } from "@/lib/db";
+import { invalidateCache } from "@/lib/cache";
 import { Feature } from "@/lib/models";
 import { getCurrentAdminUser, logActivity } from "@/lib/auth";
 import { mockSpecialFeatures } from "@/lib/mock-data";
@@ -66,6 +67,7 @@ export async function POST(req: Request) {
 
     revalidatePath("/", "layout");
     revalidatePath("/");
+    invalidateCache();
 
     return NextResponse.json({ success: true, feature });
   } catch (err) {

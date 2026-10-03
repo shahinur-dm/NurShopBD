@@ -19,7 +19,7 @@ const cached: MongooseCache = globalForMongoose.mongooseCache ?? {
 globalForMongoose.mongooseCache = cached;
 
 const DEFAULT_MONGODB_URI =
-  "mongodb+srv://efootballmadrid25_db_user:ljvpbVMGVJTQPVcH@dawatit.5hxbo9c.mongodb.net/NurCompanyWebsite?appName=dawatit";
+  "mongodb+srv://nextgen:nextgen2026@cluster0.qbunbkx.mongodb.net/NurShopBD?appName=Cluster0";
 
 /**
  * Next.js catalog site: database connection manager.
@@ -27,7 +27,7 @@ const DEFAULT_MONGODB_URI =
  */
 export async function connectDB() {
   let MONGODB_URI = process.env.MONGODB_URI || DEFAULT_MONGODB_URI;
-  if (!MONGODB_URI || MONGODB_URI.includes("glwlj6v") || !MONGODB_URI.startsWith("mongodb")) {
+  if (!MONGODB_URI || !MONGODB_URI.startsWith("mongodb")) {
     MONGODB_URI = DEFAULT_MONGODB_URI;
   }
 
@@ -39,13 +39,14 @@ export async function connectDB() {
     cached.promise = mongoose
       .connect(MONGODB_URI, {
         bufferCommands: false,
-        maxPoolSize: 10,
-        minPoolSize: 1,
-        maxIdleTimeMS: 60_000,
-        serverSelectionTimeoutMS: 8_000,
-        connectTimeoutMS: 10_000,
+        maxPoolSize: 20,
+        minPoolSize: 2,
+        maxIdleTimeMS: 120_000,
+        serverSelectionTimeoutMS: 5_000,
+        connectTimeoutMS: 8_000,
+        socketTimeoutMS: 20_000,
         family: 4,
-        autoIndex: process.env.NODE_ENV !== "production",
+        autoIndex: false,
       })
       .then((m) => {
         cached.conn = m;

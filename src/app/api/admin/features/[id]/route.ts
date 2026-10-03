@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { connectDB } from "@/lib/db";
+import { invalidateCache } from "@/lib/cache";
 import { Feature } from "@/lib/models";
 import { getCurrentAdminUser, logActivity } from "@/lib/auth";
 
@@ -32,6 +33,7 @@ export async function PUT(
 
     revalidatePath("/", "layout");
     revalidatePath("/");
+    invalidateCache();
 
     await logActivity({
       action: "FEATURE_UPDATE",
@@ -70,6 +72,7 @@ export async function DELETE(
 
     revalidatePath("/", "layout");
     revalidatePath("/");
+    invalidateCache();
 
     await logActivity({
       action: "FEATURE_DELETE",

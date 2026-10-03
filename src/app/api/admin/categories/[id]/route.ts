@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { connectDB } from "@/lib/mongodb";
+import { invalidateCache } from "@/lib/cache";
 import { Category, SubCategory, type ICategory } from "@/lib/models";
 import { getCurrentAdminUser, logActivity } from "@/lib/auth";
 
@@ -69,6 +70,7 @@ export async function PUT(
     } catch {
       // ignore revalidation error
     }
+    invalidateCache();
 
     return NextResponse.json({ success: true, category });
   } catch (err: unknown) {
@@ -129,6 +131,7 @@ export async function DELETE(
     } catch {
       // ignore revalidation error
     }
+    invalidateCache();
 
     return NextResponse.json({ success: true, message: "Category deleted" });
   } catch (err: unknown) {

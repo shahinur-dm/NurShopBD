@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { connectDB } from "@/lib/db";
+import { invalidateCache } from "@/lib/cache";
 import { CompanyProfile } from "@/lib/models";
 import { getCurrentAdminUser, logActivity } from "@/lib/auth";
 import { fallbackCompanyProfile } from "@/lib/data";
@@ -119,6 +120,7 @@ export async function PUT(req: Request) {
     } catch {
       // ignore revalidation error in environments without full cache context
     }
+    invalidateCache();
 
     return NextResponse.json({ success: true, profile: serialize(resultDoc) });
   } catch (err: unknown) {

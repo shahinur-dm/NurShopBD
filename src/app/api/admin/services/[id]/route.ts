@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { connectDB } from "@/lib/db";
+import { invalidateCache } from "@/lib/cache";
 import { Service } from "@/lib/models";
 import { getCurrentAdminUser, logActivity } from "@/lib/auth";
 
@@ -39,6 +40,7 @@ export async function PUT(
     revalidatePath("/services");
     if (service.slug) revalidatePath(`/services/${service.slug}`);
     revalidatePath("/use-cases");
+    invalidateCache();
 
     await logActivity({
       action: "SERVICE_UPDATE",
@@ -79,6 +81,7 @@ export async function DELETE(
     revalidatePath("/");
     revalidatePath("/services");
     revalidatePath("/use-cases");
+    invalidateCache();
 
     await logActivity({
       action: "SERVICE_DELETE",

@@ -53,7 +53,7 @@ export function CategorySidebar({
 
   // Fetch catalog tree on mount
   useEffect(() => {
-    fetch("/api/catalog-tree", { cache: "no-store" })
+    fetch("/api/catalog-tree")
       .then((res) => res.json())
       .then((data) => {
         if (data.tree) {

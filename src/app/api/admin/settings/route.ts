@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { connectDB } from "@/lib/db";
+import { invalidateCache } from "@/lib/cache";
 import { SiteSettings, CompanyProfile } from "@/lib/models";
 import { getCurrentAdminUser, logActivity } from "@/lib/auth";
 import { fallbackSettings } from "@/lib/data";
@@ -193,6 +194,7 @@ export async function PUT(req: Request) {
     } catch {
       // ignore
     }
+    invalidateCache();
 
     return NextResponse.json({
       success: true,

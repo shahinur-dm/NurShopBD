@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import mongoose from "mongoose";
 import { connectDB } from "@/lib/mongodb";
+import { invalidateCache } from "@/lib/cache";
 import { Product, Category, SubCategory, type IProduct } from "@/lib/models";
 import { getCurrentAdminUser, logActivity } from "@/lib/auth";
 
@@ -149,6 +150,7 @@ export async function PUT(
     } catch {
       // ignore revalidation error
     }
+    invalidateCache();
 
     return NextResponse.json({ success: true, product: updatedProduct });
   } catch (err: unknown) {
@@ -212,6 +214,7 @@ export async function DELETE(
     } catch {
       // ignore revalidation error
     }
+    invalidateCache();
 
     return NextResponse.json({ success: true, message: "Product deleted" });
   } catch (err: unknown) {
