@@ -107,6 +107,10 @@ export async function PUT(
       updateData.price = body.price !== null && body.price !== "" ? Number(body.price) : undefined;
     }
 
+    if (body.itemNameModel !== undefined && (!body.sku || body.sku === "")) {
+      updateData.sku = body.itemNameModel ? String(body.itemNameModel).trim() : undefined;
+    }
+
     let updatedProduct: IProduct | null = null;
     if (mongoose.Types.ObjectId.isValid(id)) {
       updatedProduct = await Product.findByIdAndUpdate(id, updateData, {

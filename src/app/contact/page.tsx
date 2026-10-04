@@ -11,8 +11,7 @@ import {
 } from "@/lib/data";
 import { buildPageMetadata } from "@/lib/seo";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 60;
 
 export async function generateMetadata(): Promise<Metadata> {
   const site = await getSettings();

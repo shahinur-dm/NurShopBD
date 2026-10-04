@@ -78,35 +78,30 @@ export function verifySessionToken(
   }
 }
 
-export async function getCurrentAdminUser(): Promise<IUser | null> {
+export async function getCurrentAdminUser(req?: Request): Promise<IUser | null> {
   try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get(COOKIE_NAME)?.value;
+    let token: string | undefined = undefined;
+    if (req) {
+      const cookieHeader = req.headers.get("cookie") || "";
+      const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${COOKIE_NAME}=([^;]+)`));
+      if (match) token = match[1];
+    }
+    if (!token) {
+      try {
+        const cookieStore = await cookies();
+        token = cookieStore.get(COOKIE_NAME)?.value;
+      } catch {
+        // cookies() might fail in some contexts
+      }
+    }
     if (!token) return null;
 
     const payload = verifySessionToken(token);
     if (!payload?.userId) return null;
 
-    try {
-      const db = await connectDB();
-      if (db) {
-        let user: IUser | null = null;
-        if (payload.userId && payload.userId.length === 24 && /^[0-9a-fA-F]{24}$/.test(payload.userId)) {
-          user = await User.findById(payload.userId).lean<IUser | null>();
-        }
-        if (!user && payload.email) {
-          user = await User.findOne({ email: payload.email.toLowerCase().trim() }).lean<IUser | null>();
-        }
-        if (user && user.active) return user;
-      }
-    } catch (e) {
-      console.warn("DB user lookup error, using verified session token:", e);
-    }
-
-    // Verified admin session payload fallback if DB is temporarily disconnected/slow
-    if (payload.role === "super_admin" || payload.role === "admin" || payload.role === "editor") {
+    if (payload.role === "super_admin" || payload.role === "admin" || payload.role === "editor" || payload.role === "viewer") {
       return {
-        _id: payload.userId || "default_super_admin",
+        _id: payload.userId || "admin_user",
         name: payload.email ? payload.email.split("@")[0] : "Administrator",
         email: payload.email || "admin@nurengineering.com",
         passwordHash: "",

@@ -6,8 +6,7 @@ import { RelatedSearch } from "@/components/RelatedSearch";
 import { getCategories, getSubCategories, getProducts, getSettings } from "@/lib/data";
 import { buildPageMetadata } from "@/lib/seo";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 60;
 
 export async function generateMetadata({
   searchParams,

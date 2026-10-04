@@ -10,8 +10,7 @@ export const metadata: Metadata = {
     "Practical industrial automation, PLC, VFD, sensors, motors and electrical maintenance guides written by electrical engineering practitioners in Bangladesh.",
 };
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 60;
 
 export default async function BlogListingPage({
   searchParams,

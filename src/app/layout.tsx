@@ -25,8 +25,7 @@ const display = Barlow_Condensed({
   display: "swap",
 });
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 60;
 
 export const viewport: Viewport = {
   width: "device-width",

@@ -11,8 +11,7 @@ import {
 } from "@/lib/data";
 import type { PopulatedProduct } from "@/lib/data";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 60;
 
 export async function generateMetadata({
   params,

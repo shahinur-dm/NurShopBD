@@ -17,6 +17,11 @@ export interface IProduct {
   name: string;
   slug: string;
   sku?: string;
+  itemNameModel?: string;
+  benefitPoint1?: string;
+  benefitPoint2?: string;
+  benefitPoint3?: string;
+  benefitPoint4?: string;
   brand?: string;
   category: Types.ObjectId | string;
   subCategory?: Types.ObjectId | string;
@@ -55,6 +60,11 @@ const ProductSchema = new Schema<IProduct>(
     name: { type: String, required: true, trim: true },
     slug: { type: String, required: true, unique: true, lowercase: true },
     sku: String,
+    itemNameModel: String,
+    benefitPoint1: { type: String, default: "100% genuine, authorised stock" },
+    benefitPoint2: { type: String, default: "12-month manufacturer warranty" },
+    benefitPoint3: { type: String, default: "Nationwide delivery in 2-4 days" },
+    benefitPoint4: { type: String, default: "Cash on delivery available" },
     brand: String,
     category: {
       type: Schema.Types.Mixed,
@@ -99,6 +109,7 @@ const ProductSchema = new Schema<IProduct>(
 
 ProductSchema.index({ name: "text", shortDescription: "text", sku: "text" });
 ProductSchema.index({ published: 1, order: 1, featured: -1, createdAt: -1 });
+ProductSchema.index({ order: 1, createdAt: -1 });
 ProductSchema.index({ category: 1, published: 1, order: 1 });
 ProductSchema.index({ subCategory: 1, published: 1, order: 1 });
 ProductSchema.index({ featured: 1, published: 1 });

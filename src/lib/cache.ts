@@ -44,8 +44,22 @@ export function setCache<T>(key: string, data: T, ttlMs: number = DEFAULT_TTL_MS
   return data;
 }
 
+interface InFlightCache {
+  promises: Map<string, Promise<unknown>>;
+}
+
+declare global {
+  var __nurshop_inflight_cache: Map<string, Promise<unknown>> | undefined;
+}
+
+const inflight: Map<string, Promise<unknown>> =
+  globalThis.__nurshop_inflight_cache ?? new Map<string, Promise<unknown>>();
+
+globalThis.__nurshop_inflight_cache = inflight;
+
 /**
- * Execute a fetcher function with caching.
+ * Execute a fetcher function with caching and in-flight promise deduplication.
+ * Prevents multiple simultaneous identical queries (cache stampede).
  */
 export async function withCache<T>(
   key: string,
@@ -56,11 +70,26 @@ export async function withCache<T>(
   if (cached !== null && cached !== undefined) {
     return cached;
   }
-  const result = await fetcher();
-  if (result !== null && result !== undefined) {
-    setCache(key, result, ttlMs);
+
+  const existingPromise = inflight.get(key);
+  if (existingPromise) {
+    return existingPromise as Promise<T>;
   }
-  return result;
+
+  const promise = (async () => {
+    try {
+      const result = await fetcher();
+      if (result !== null && result !== undefined) {
+        setCache(key, result, ttlMs);
+      }
+      return result;
+    } finally {
+      inflight.delete(key);
+    }
+  })();
+
+  inflight.set(key, promise);
+  return promise;
 }
 
 /**

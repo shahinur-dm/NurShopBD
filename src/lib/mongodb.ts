@@ -6,26 +6,24 @@ interface MongooseCache {
 }
 
 declare global {
-  var mongooseCache: MongooseCache | undefined;
+  var __nurshop_mongoose_cache: MongooseCache | undefined;
 }
 
-const globalForMongoose = globalThis as unknown as { mongooseCache?: MongooseCache };
-
-const cached: MongooseCache = globalForMongoose.mongooseCache ?? {
+const cached: MongooseCache = globalThis.__nurshop_mongoose_cache ?? {
   conn: null,
   promise: null,
 };
 
-globalForMongoose.mongooseCache = cached;
+globalThis.__nurshop_mongoose_cache = cached;
 
 const DEFAULT_MONGODB_URI =
-  "mongodb+srv://nextgen:nextgen2026@cluster0.qbunbkx.mongodb.net/NurShopBD?appName=Cluster0";
+  "mongodb+srv://nextgen:nextgen2026@cluster0.qbunbkx.mongodb.net/NurShopBD?retryWrites=true&w=majority&appName=Cluster0";
 
 /**
- * Next.js catalog site: database connection manager.
- * Connects safely with cached instance and handles reconnections if severed.
+ * Next.js database connection manager.
+ * Single persistent connection instance reused across all requests.
  */
-export async function connectDB() {
+export async function connectDB(): Promise<typeof mongoose | null> {
   let MONGODB_URI = process.env.MONGODB_URI || DEFAULT_MONGODB_URI;
   if (!MONGODB_URI || !MONGODB_URI.startsWith("mongodb")) {
     MONGODB_URI = DEFAULT_MONGODB_URI;
@@ -36,18 +34,21 @@ export async function connectDB() {
   }
 
   if (!cached.promise) {
+    const opts = {
+      bufferCommands: false,
+      maxPoolSize: 10,
+      minPoolSize: 1,
+      maxIdleTimeMS: 120_000,
+      serverSelectionTimeoutMS: 20_000,
+      connectTimeoutMS: 20_000,
+      socketTimeoutMS: 45_000,
+      heartbeatFrequencyMS: 30_000,
+      retryWrites: true,
+      retryReads: true,
+    };
+
     cached.promise = mongoose
-      .connect(MONGODB_URI, {
-        bufferCommands: false,
-        maxPoolSize: 20,
-        minPoolSize: 2,
-        maxIdleTimeMS: 120_000,
-        serverSelectionTimeoutMS: 5_000,
-        connectTimeoutMS: 8_000,
-        socketTimeoutMS: 20_000,
-        family: 4,
-        autoIndex: false,
-      })
+      .connect(MONGODB_URI, opts)
       .then((m) => {
         cached.conn = m;
         return m;
@@ -65,7 +66,7 @@ export async function connectDB() {
   } catch (err) {
     cached.promise = null;
     cached.conn = null;
-    console.error("MongoDB connection failed:", err);
+    console.error("MongoDB connection error:", err);
     return null;
   }
 }

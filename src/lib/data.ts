@@ -454,32 +454,45 @@ export const getSubCategories = reactCache(async function getSubCategories(
       if (db) {
         const filter: Record<string, unknown> = { published: { $ne: false } };
         if (categorySlugOrId) {
-          if (mongoose.Types.ObjectId.isValid(categorySlugOrId)) {
+          const allCats = await getCategories("product");
+          const cat = allCats.find(
+            (c) =>
+              c.slug === categorySlugOrId ||
+              String(c._id) === categorySlugOrId ||
+              c.name.toLowerCase() === categorySlugOrId.replace(/-/g, " ").toLowerCase()
+          );
+          if (cat) {
+            filter.$or = [
+              { category: cat._id },
+              { category: String(cat._id) },
+              { category: cat.slug },
+            ];
+          } else if (mongoose.Types.ObjectId.isValid(categorySlugOrId)) {
             filter.category = new mongoose.Types.ObjectId(categorySlugOrId);
           } else {
-            const cat = await Category.findOne({
-              $or: [
-                { slug: categorySlugOrId },
-                { slug: { $regex: new RegExp(`^${categorySlugOrId}$`, "i") } },
-              ],
-            }).lean<ICategory | null>();
-            if (cat) {
-              filter.$or = [
-                { category: cat._id },
-                { category: String(cat._id) },
-                { category: cat.slug },
-              ];
-            } else {
-              filter.category = categorySlugOrId;
-            }
+            filter.category = categorySlugOrId;
           }
         }
         const docs = await SubCategory.find(filter)
-          .populate("category", "name slug")
           .sort({ order: 1, name: 1 })
           .lean<ISubCategory[]>();
         if (docs) {
-          return serialize(docs);
+          const allCats = await getCategories("product");
+          const catMap = new Map<string, { _id: string; name: string; slug: string }>();
+          for (const c of allCats) {
+            catMap.set(String(c._id), { _id: String(c._id), name: c.name, slug: c.slug });
+            catMap.set(c.slug, { _id: String(c._id), name: c.name, slug: c.slug });
+          }
+          const populated = docs.map((s) => {
+            const parent = typeof s.category === "object" && s.category !== null && "name" in s.category
+              ? s.category
+              : catMap.get(String(s.category)) || s.category;
+            return {
+              ...s,
+              category: parent,
+            };
+          });
+          return serialize(populated) as unknown as ISubCategory[];
         }
       }
     } catch (err) {
@@ -675,19 +688,13 @@ export const getProducts = reactCache(async function getProducts(opts?: {
         if (opts?.featured) filter.featured = true;
 
         if (opts?.categorySlug) {
-          let catDoc = null;
-          if (mongoose.Types.ObjectId.isValid(opts.categorySlug)) {
-            catDoc = await Category.findById(opts.categorySlug).lean<ICategory | null>();
-          }
-          if (!catDoc) {
-            catDoc = await Category.findOne({
-              $or: [
-                { slug: opts.categorySlug },
-                { slug: { $regex: new RegExp(`^${opts.categorySlug}$`, "i") } },
-                { name: { $regex: new RegExp(`^${opts.categorySlug.replace(/-/g, " ")}$`, "i") } },
-              ],
-            }).lean<ICategory | null>();
-          }
+          const allCats = await getCategories("product");
+          const catDoc = allCats.find(
+            (c) =>
+              c.slug === opts.categorySlug ||
+              String(c._id) === opts.categorySlug ||
+              c.name.toLowerCase() === opts.categorySlug?.replace(/-/g, " ").toLowerCase()
+          );
           if (catDoc) {
             filter.$or = [
               { category: catDoc._id },
@@ -700,19 +707,13 @@ export const getProducts = reactCache(async function getProducts(opts?: {
         }
 
         if (opts?.subCategorySlug) {
-          let subDoc = null;
-          if (mongoose.Types.ObjectId.isValid(opts.subCategorySlug)) {
-            subDoc = await SubCategory.findById(opts.subCategorySlug).lean<ISubCategory | null>();
-          }
-          if (!subDoc) {
-            subDoc = await SubCategory.findOne({
-              $or: [
-                { slug: opts.subCategorySlug },
-                { slug: { $regex: new RegExp(`^${opts.subCategorySlug}$`, "i") } },
-                { name: { $regex: new RegExp(`^${opts.subCategorySlug.replace(/-/g, " ")}$`, "i") } },
-              ],
-            }).lean<ISubCategory | null>();
-          }
+          const allSubs = await getSubCategories();
+          const subDoc = allSubs.find(
+            (s) =>
+              s.slug === opts.subCategorySlug ||
+              String(s._id) === opts.subCategorySlug ||
+              s.name.toLowerCase() === opts.subCategorySlug?.replace(/-/g, " ").toLowerCase()
+          );
           if (subDoc) {
             const subCondition = {
               $or: [
@@ -754,7 +755,7 @@ export const getProducts = reactCache(async function getProducts(opts?: {
         }
 
         let query = Product.find(filter)
-          .select("name slug sku brand category subCategory shortDescription price currency image inStock featured published order createdAt deliveryTime options variants")
+          .select("name slug sku itemNameModel brand category subCategory shortDescription price currency image inStock featured published order createdAt deliveryTime options variants")
           .sort({ order: 1, featured: -1, createdAt: -1 });
 
         if (opts?.page && opts?.limit) {
@@ -865,19 +866,13 @@ export const getProductsTotalCount = reactCache(async function getProductsTotalC
         if (opts?.featured) filter.featured = true;
 
         if (opts?.categorySlug) {
-          let catDoc = null;
-          if (mongoose.Types.ObjectId.isValid(opts.categorySlug)) {
-            catDoc = await Category.findById(opts.categorySlug).lean<ICategory | null>();
-          }
-          if (!catDoc) {
-            catDoc = await Category.findOne({
-              $or: [
-                { slug: opts.categorySlug },
-                { slug: { $regex: new RegExp(`^${opts.categorySlug}$`, "i") } },
-                { name: { $regex: new RegExp(`^${opts.categorySlug.replace(/-/g, " ")}$`, "i") } },
-              ],
-            }).lean<ICategory | null>();
-          }
+          const allCats = await getCategories("product");
+          const catDoc = allCats.find(
+            (c) =>
+              c.slug === opts.categorySlug ||
+              String(c._id) === opts.categorySlug ||
+              c.name.toLowerCase() === opts.categorySlug?.replace(/-/g, " ").toLowerCase()
+          );
           if (catDoc) {
             filter.$or = [
               { category: catDoc._id },
@@ -890,19 +885,13 @@ export const getProductsTotalCount = reactCache(async function getProductsTotalC
         }
 
         if (opts?.subCategorySlug) {
-          let subDoc = null;
-          if (mongoose.Types.ObjectId.isValid(opts.subCategorySlug)) {
-            subDoc = await SubCategory.findById(opts.subCategorySlug).lean<ISubCategory | null>();
-          }
-          if (!subDoc) {
-            subDoc = await SubCategory.findOne({
-              $or: [
-                { slug: opts.subCategorySlug },
-                { slug: { $regex: new RegExp(`^${opts.subCategorySlug}$`, "i") } },
-                { name: { $regex: new RegExp(`^${opts.subCategorySlug.replace(/-/g, " ")}$`, "i") } },
-              ],
-            }).lean<ISubCategory | null>();
-          }
+          const allSubs = await getSubCategories();
+          const subDoc = allSubs.find(
+            (s) =>
+              s.slug === opts.subCategorySlug ||
+              String(s._id) === opts.subCategorySlug ||
+              s.name.toLowerCase() === opts.subCategorySlug?.replace(/-/g, " ").toLowerCase()
+          );
           if (subDoc) {
             const subCondition = {
               $or: [
@@ -972,46 +961,44 @@ export const getProductBySlug = reactCache(async function getProductBySlug(
           ],
           published: { $ne: false },
         })
-          .populate("category")
-          .populate("subCategory")
           .populate("relatedServices")
           .lean<PopulatedProduct | null>();
 
         if (!doc && mongoose.Types.ObjectId.isValid(decodedSlug)) {
           doc = await Product.findOne({ _id: decodedSlug, published: { $ne: false } })
-            .populate("category")
-            .populate("subCategory")
             .populate("relatedServices")
             .lean<PopulatedProduct | null>();
         }
 
         if (doc) {
+          const allCats = await getCategories("product");
+          const allSubs = await getSubCategories();
+          const catMap = new Map<string, ICategory>();
+          for (const c of allCats) {
+            catMap.set(String(c._id), c);
+            catMap.set(c.slug, c);
+          }
+          const subMap = new Map<string, ISubCategory>();
+          for (const s of allSubs) {
+            subMap.set(String(s._id), s);
+            subMap.set(s.slug, s);
+          }
+
           if (!doc.category || typeof doc.category !== "object" || !("name" in doc.category)) {
             const catId = String(doc.category);
-            let foundCat = null;
-            if (mongoose.Types.ObjectId.isValid(catId)) {
-              foundCat = await Category.findById(catId).lean<ICategory | null>();
-            }
-            if (!foundCat) {
-              foundCat = await Category.findOne({
-                $or: [{ slug: catId }, { slug: new RegExp(`^${catId}$`, "i") }, { name: catId }],
-              }).lean<ICategory | null>();
-            }
-            if (foundCat) doc.category = foundCat;
+            const foundCat = catMap.get(catId) || ({
+              _id: catId,
+              name: catId.replace(/-/g, " "),
+              slug: catId,
+              order: 0,
+            } as unknown as ICategory);
+            doc.category = foundCat;
           }
 
           if (doc.subCategory && (typeof doc.subCategory !== "object" || !("name" in doc.subCategory))) {
             const subId = String(doc.subCategory);
-            let foundSub = null;
-            if (mongoose.Types.ObjectId.isValid(subId)) {
-              foundSub = await SubCategory.findById(subId).lean<ISubCategory | null>();
-            }
-            if (!foundSub) {
-              foundSub = await SubCategory.findOne({
-                $or: [{ slug: subId }, { slug: new RegExp(`^${subId}$`, "i") }, { name: subId }],
-              }).lean<ISubCategory | null>();
-            }
-            if (foundSub) doc.subCategory = foundSub;
+            const foundSub = subMap.get(subId) || null;
+            doc.subCategory = foundSub;
           }
 
           return serialize(doc);
@@ -1048,20 +1035,56 @@ export async function getRelatedProducts(
           };
         }
 
-        const primaryDocs = await Product.find({
-          ...catFilter,
-          slug: { $ne: excludeSlug },
-          published: { $ne: false },
-        })
-          .populate("category")
-          .populate("subCategory")
-          .populate("relatedServices")
-          .sort({ order: 1, _id: 1 })
-          .limit(limit)
-          .lean<PopulatedProduct[]>();
+        const [primaryDocs, allCats, allSubs] = await Promise.all([
+          Product.find({
+            ...catFilter,
+            slug: { $ne: excludeSlug },
+            published: { $ne: false },
+          })
+            .sort({ order: 1, _id: 1 })
+            .limit(limit)
+            .lean<PopulatedProduct[]>(),
+          getCategories("product"),
+          getSubCategories(),
+        ]);
+
+        const catMap = new Map<string, ICategory>();
+        for (const c of allCats) {
+          catMap.set(String(c._id), c);
+          catMap.set(c.slug, c);
+        }
+        const subMap = new Map<string, ISubCategory>();
+        for (const s of allSubs) {
+          subMap.set(String(s._id), s);
+          subMap.set(s.slug, s);
+        }
+
+        const mapProduct = (p: PopulatedProduct) => {
+          let cat = p.category;
+          if (!cat || typeof cat !== "object" || !("name" in cat)) {
+            const ref = String(cat);
+            cat = catMap.get(ref) || ({
+              _id: ref,
+              name: ref.replace(/-/g, " "),
+              slug: ref,
+              order: 0,
+            } as unknown as ICategory);
+          }
+          let sub = p.subCategory;
+          if (sub && (typeof sub !== "object" || !("name" in sub))) {
+            const subRef = String(sub);
+            sub = subMap.get(subRef) || null;
+          }
+          return {
+            ...p,
+            category: cat,
+            subCategory: sub,
+            relatedServices: p.relatedServices || [],
+          };
+        };
 
         if (primaryDocs && primaryDocs.length >= limit) {
-          return serialize(dedupeRelatedProducts(primaryDocs, excludeSlug));
+          return serialize(dedupeRelatedProducts(primaryDocs.map(mapProduct), excludeSlug));
         }
 
         const existingIds = (primaryDocs || []).map((d) => d._id);
@@ -1072,16 +1095,12 @@ export async function getRelatedProducts(
           slug: { $ne: excludeSlug },
           published: { $ne: false },
         })
-          .populate("category")
-          .populate("subCategory")
-          .populate("relatedServices")
           .sort({ featured: -1, order: 1, _id: 1 })
           .limit(extraNeeded)
           .lean<PopulatedProduct[]>();
 
-        return serialize(
-          dedupeRelatedProducts([...(primaryDocs || []), ...(fallbackDocs || [])], excludeSlug)
-        );
+        const combined = [...(primaryDocs || []), ...(fallbackDocs || [])].map(mapProduct);
+        return serialize(dedupeRelatedProducts(combined, excludeSlug));
       }
     } catch (err) {
       console.error("getRelatedProducts DB error:", err);
