@@ -20,6 +20,7 @@ import {
   ContactMessage,
   User,
   MediaItem,
+  ActivityLog,
   DownloadFile,
   Order,
 } from "@/lib/models";
@@ -44,6 +45,7 @@ const MODEL_MAP: Record<string, mongoose.Model<any>> = {
   contactMessages: ContactMessage,
   users: User,
   mediaItems: MediaItem,
+  activityLogs: ActivityLog,
   downloadFiles: DownloadFile,
   orders: Order,
 };
@@ -69,8 +71,67 @@ export async function POST(req: Request) {
 
   try {
     const payload = await req.json();
-    const { backup, dryRun } = payload;
+    const { backup, collection, records, dryRun } = payload;
 
+    // Single-collection restore mode (used for chunked restoration of large backups)
+    if (collection && Array.isArray(records)) {
+      const model = MODEL_MAP[collection];
+      if (!model) {
+        return NextResponse.json({ error: `Unknown collection: ${collection}` }, { status: 400 });
+      }
+
+      if (dryRun) {
+        return NextResponse.json({
+          valid: true,
+          collection,
+          count: records.length,
+        });
+      }
+
+      const db = await connectDB();
+      if (!db) {
+        return NextResponse.json({ error: "Database connection failed" }, { status: 500 });
+      }
+
+      const bulkOps = [];
+      for (const rawDoc of records) {
+        if (!rawDoc || typeof rawDoc !== "object") continue;
+        const doc = { ...rawDoc };
+        const id = doc._id;
+        delete doc.__v;
+
+        if (id) {
+          const filterId = mongoose.Types.ObjectId.isValid(id)
+            ? new mongoose.Types.ObjectId(id)
+            : id;
+          bulkOps.push({
+            replaceOne: {
+              filter: { _id: filterId },
+              replacement: doc,
+              upsert: true,
+            },
+          });
+        } else {
+          bulkOps.push({
+            insertOne: {
+              document: doc,
+            },
+          });
+        }
+      }
+
+      if (bulkOps.length > 0) {
+        await model.bulkWrite(bulkOps, { ordered: false });
+      }
+
+      return NextResponse.json({
+        success: true,
+        collection,
+        restored: records.length,
+      });
+    }
+
+    // Full backup mode
     if (!backup || typeof backup !== "object") {
       return NextResponse.json(
         { error: "Invalid backup payload: Empty or malformed data." },
@@ -94,10 +155,10 @@ export async function POST(req: Request) {
     let totalRecordsToRestore = 0;
 
     for (const [key, model] of Object.entries(MODEL_MAP)) {
-      const records = collections[key];
-      if (Array.isArray(records)) {
-        summary[key] = records.length;
-        totalRecordsToRestore += records.length;
+      const recs = collections[key];
+      if (Array.isArray(recs)) {
+        summary[key] = recs.length;
+        totalRecordsToRestore += recs.length;
       } else {
         summary[key] = 0;
       }
@@ -125,8 +186,8 @@ export async function POST(req: Request) {
 
     // Execute safe, non-destructive restoration collection by collection
     for (const [key, model] of Object.entries(MODEL_MAP)) {
-      const records = collections[key];
-      if (!Array.isArray(records) || records.length === 0) {
+      const recs = collections[key];
+      if (!Array.isArray(recs) || recs.length === 0) {
         restoredCounts[key] = 0;
         continue;
       }
@@ -134,7 +195,7 @@ export async function POST(req: Request) {
       let restoredInCollection = 0;
       const bulkOps = [];
 
-      for (const rawDoc of records) {
+      for (const rawDoc of recs) {
         if (!rawDoc || typeof rawDoc !== "object") continue;
 
         // Clean document copy

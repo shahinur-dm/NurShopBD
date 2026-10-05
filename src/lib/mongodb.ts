@@ -20,8 +20,6 @@ mongoose.set("autoIndex", false);
 mongoose.set("bufferCommands", false);
 
 const DEFAULT_MONGODB_URI =
-  "mongodb+srv://nur:nureng@cluster0.eloiyt1.mongodb.net/NurShopBD?retryWrites=true&w=majority&appName=Cluster0";
-const FALLBACK_MONGODB_URI =
   "mongodb+srv://nextgen:nextgen2026@cluster0.qbunbkx.mongodb.net/NurShopBD?retryWrites=true&w=majority&appName=Cluster0";
 
 /**
@@ -47,11 +45,11 @@ export async function connectDB(): Promise<typeof mongoose | null> {
       minPoolSize: 1,
       maxConnecting: 3,
       maxIdleTimeMS: 60_000,
-      serverSelectionTimeoutMS: 10_000,
-      connectTimeoutMS: 10_000,
+      serverSelectionTimeoutMS: 15_000,
+      connectTimeoutMS: 15_000,
       socketTimeoutMS: 45_000,
       heartbeatFrequencyMS: 15_000,
-      waitQueueTimeoutMS: 10_000,
+      waitQueueTimeoutMS: 15_000,
       readPreference: "primary" as const,
       autoIndex: false,
       retryWrites: true,
@@ -65,16 +63,22 @@ export async function connectDB(): Promise<typeof mongoose | null> {
         return m;
       })
       .catch(async (err) => {
-        console.warn(`Primary MongoDB connection failed (${err.message}). Attempting fallback cluster...`);
-        try {
-          const fallback = await mongoose.connect(FALLBACK_MONGODB_URI, opts);
-          cached.conn = fallback;
-          return fallback;
-        } catch (fallbackErr: unknown) {
-          cached.promise = null;
-          cached.conn = null;
-          throw fallbackErr;
+        // If custom URI failed and is different from DEFAULT_MONGODB_URI, fallback to DEFAULT
+        if (MONGODB_URI !== DEFAULT_MONGODB_URI) {
+          console.warn("Primary MongoDB URI failed, attempting default connection fallback...", err.message);
+          try {
+            const fallbackConn = await mongoose.connect(DEFAULT_MONGODB_URI, opts);
+            cached.conn = fallbackConn;
+            return fallbackConn;
+          } catch (fallbackErr) {
+            cached.promise = null;
+            cached.conn = null;
+            throw fallbackErr;
+          }
         }
+        cached.promise = null;
+        cached.conn = null;
+        throw err;
       });
   }
 

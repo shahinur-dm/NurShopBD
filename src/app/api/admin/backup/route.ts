@@ -25,9 +25,38 @@ import {
 
 export const dynamic = "force-dynamic";
 
+// Map collection names to their respective models
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const COLLECTION_MODELS: Record<string, { model: any; projection?: any; sort?: any }> = {
+  products: { model: Product },
+  categories: { model: Category },
+  subcategories: { model: SubCategory },
+  brands: { model: Brand },
+  services: { model: Service },
+  features: { model: Feature },
+  banners: { model: Banner },
+  blogPosts: { model: BlogPost },
+  blogCategories: { model: BlogCategory },
+  useCases: { model: UseCase },
+  siteSettings: { model: SiteSettings },
+  companyProfile: { model: CompanyProfile },
+  contactMessages: { model: ContactMessage },
+  users: {
+    model: User,
+    projection: { passwordHash: 1, email: 1, name: 1, role: 1, active: 1, phone: 1, createdAt: 1, updatedAt: 1 },
+  },
+  mediaItems: { model: MediaItem },
+  activityLogs: { model: ActivityLog, sort: { createdAt: -1 } },
+  downloadFiles: { model: DownloadFile },
+  orders: { model: Order },
+};
+
 /**
  * GET /api/admin/backup
- * Generates a complete, non-destructive JSON backup bundle of all NUR SHOP BD database collections.
+ * Supports:
+ * - ?manifest=true -> Returns counts for all collections + admin metadata
+ * - ?collection=<name>&skip=0&limit=10 -> Returns chunked collection data
+ * - Default -> Generates full JSON backup
  */
 export async function GET(req: Request) {
   const admin = await getCurrentAdminUser(req);
@@ -41,38 +70,86 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Database connection unavailable" }, { status: 500 });
     }
 
-    // Safely query collections with chunked batching for large collections to prevent network timeouts
-    const productCount = await Product.countDocuments();
-    const products: Record<string, unknown>[] = [];
-    for (let i = 0; i < productCount; i += 10) {
-      const chunk = await Product.find({}).skip(i).limit(10).lean();
-      products.push(...(chunk as unknown as Record<string, unknown>[]));
+    const { searchParams } = new URL(req.url);
+    const isManifest = searchParams.get("manifest") === "true";
+    const collectionParam = searchParams.get("collection");
+
+    // 1. MANIFEST MODE: Return metadata and collection counts
+    if (isManifest) {
+      const counts: Record<string, number> = {};
+      let totalRecords = 0;
+
+      for (const [key, config] of Object.entries(COLLECTION_MODELS)) {
+        try {
+          const count = await config.model.countDocuments();
+          counts[key] = count;
+          totalRecords += count;
+        } catch {
+          counts[key] = 0;
+        }
+      }
+
+      return NextResponse.json({
+        system: "NUR SHOP BD",
+        version: "1.0.0",
+        createdAt: new Date().toISOString(),
+        exportedBy: {
+          _id: String(admin._id),
+          name: admin.name,
+          email: admin.email,
+          role: admin.role,
+        },
+        counts,
+        totalRecords,
+        collectionsList: Object.keys(COLLECTION_MODELS),
+      });
     }
 
-    const categories = await Category.find({}).lean();
-    const subcategories = await SubCategory.find({}).lean();
-    const brands = await Brand.find({}).lean();
-    const services = await Service.find({}).lean();
-    const features = await Feature.find({}).lean();
-    const banners = await Banner.find({}).lean();
-    const blogPosts = await BlogPost.find({}).lean();
-    const blogCategories = await BlogCategory.find({}).lean();
-    const useCases = await UseCase.find({}).lean();
-    const siteSettings = await SiteSettings.find({}).lean();
-    const companyProfile = await CompanyProfile.find({}).lean();
-    const contactMessages = await ContactMessage.find({}).lean();
-    const users = await User.find({}, { passwordHash: 1, email: 1, name: 1, role: 1, active: 1, phone: 1, createdAt: 1, updatedAt: 1 }).lean();
+    // 2. CHUNKED COLLECTION MODE: Return data for a single collection with pagination
+    if (collectionParam && COLLECTION_MODELS[collectionParam]) {
+      const config = COLLECTION_MODELS[collectionParam];
+      const skip = parseInt(searchParams.get("skip") || "0", 10);
+      const limit = parseInt(searchParams.get("limit") || "50", 10);
 
-    const mediaCount = await MediaItem.countDocuments();
-    const mediaItems: Record<string, unknown>[] = [];
-    for (let i = 0; i < mediaCount; i += 10) {
-      const chunk = await MediaItem.find({}).skip(i).limit(10).lean();
-      mediaItems.push(...(chunk as unknown as Record<string, unknown>[]));
+      let query = config.model.find({}, config.projection || {});
+      if (config.sort) {
+        query = query.sort(config.sort);
+      } else {
+        query = query.sort({ _id: 1 });
+      }
+      if (skip > 0) query = query.skip(skip);
+      if (limit > 0) query = query.limit(limit);
+
+      const items = await query.lean();
+      return NextResponse.json({
+        collection: collectionParam,
+        skip,
+        limit,
+        count: items.length,
+        data: serialize(items),
+      });
     }
 
-    const activityLogs = await ActivityLog.find({}).sort({ createdAt: -1 }).limit(500).lean();
-    const downloadFiles = await DownloadFile.find({}).lean();
-    const orders = await Order.find({}).lean();
+    // 3. FULL BACKUP MODE (Direct Single Request):
+    const backupCollections: Record<string, unknown[]> = {};
+    const counts: Record<string, number> = {};
+    let totalRecords = 0;
+
+    for (const [key, config] of Object.entries(COLLECTION_MODELS)) {
+      const totalInCol = await config.model.countDocuments();
+      counts[key] = totalInCol;
+      totalRecords += totalInCol;
+
+      const items: Record<string, unknown>[] = [];
+      const batchSize = key === "products" || key === "mediaItems" ? 10 : 100;
+      for (let i = 0; i < totalInCol; i += batchSize) {
+        let query = config.model.find({}, config.projection || {});
+        if (config.sort) query = query.sort(config.sort);
+        const chunk = await query.skip(i).limit(batchSize).lean();
+        items.push(...(chunk as unknown as Record<string, unknown>[]));
+      }
+      backupCollections[key] = serialize(items);
+    }
 
     const backupData = {
       system: "NUR SHOP BD",
@@ -84,65 +161,9 @@ export async function GET(req: Request) {
         email: admin.email,
         role: admin.role,
       },
-      counts: {
-        products: products.length,
-        categories: categories.length,
-        subcategories: subcategories.length,
-        brands: brands.length,
-        services: services.length,
-        features: features.length,
-        banners: banners.length,
-        blogPosts: blogPosts.length,
-        blogCategories: blogCategories.length,
-        useCases: useCases.length,
-        siteSettings: siteSettings.length,
-        companyProfile: companyProfile.length,
-        contactMessages: contactMessages.length,
-        users: users.length,
-        mediaItems: mediaItems.length,
-        activityLogs: activityLogs.length,
-        downloadFiles: downloadFiles.length,
-        orders: orders.length,
-      },
-      totalRecords:
-        products.length +
-        categories.length +
-        subcategories.length +
-        brands.length +
-        services.length +
-        features.length +
-        banners.length +
-        blogPosts.length +
-        blogCategories.length +
-        useCases.length +
-        siteSettings.length +
-        companyProfile.length +
-        contactMessages.length +
-        users.length +
-        mediaItems.length +
-        activityLogs.length +
-        downloadFiles.length +
-        orders.length,
-      collections: {
-        products: serialize(products),
-        categories: serialize(categories),
-        subcategories: serialize(subcategories),
-        brands: serialize(brands),
-        services: serialize(services),
-        features: serialize(features),
-        banners: serialize(banners),
-        blogPosts: serialize(blogPosts),
-        blogCategories: serialize(blogCategories),
-        useCases: serialize(useCases),
-        siteSettings: serialize(siteSettings),
-        companyProfile: serialize(companyProfile),
-        contactMessages: serialize(contactMessages),
-        users: serialize(users),
-        mediaItems: serialize(mediaItems),
-        activityLogs: serialize(activityLogs),
-        downloadFiles: serialize(downloadFiles),
-        orders: serialize(orders),
-      },
+      counts,
+      totalRecords,
+      collections: backupCollections,
     };
 
     // Log the backup action

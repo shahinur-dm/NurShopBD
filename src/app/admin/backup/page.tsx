@@ -37,6 +37,7 @@ export default function AdminBackupPage() {
 
   // --- Download State ---
   const [downloading, setDownloading] = useState(false);
+  const [downloadStatus, setDownloadStatus] = useState("");
   const [downloadSuccess, setDownloadSuccess] = useState(false);
   const [downloadError, setDownloadError] = useState("");
 
@@ -46,6 +47,7 @@ export default function AdminBackupPage() {
   const [validationReport, setValidationReport] = useState<BackupSummary | null>(null);
   const [validating, setValidating] = useState(false);
   const [restoring, setRestoring] = useState(false);
+  const [restoreStatus, setRestoreStatus] = useState("");
   const [restoreSuccess, setRestoreSuccess] = useState(false);
   const [restoreError, setRestoreError] = useState("");
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -53,23 +55,70 @@ export default function AdminBackupPage() {
   // Trigger Download
   async function handleDownloadBackup() {
     setDownloading(true);
+    setDownloadStatus("Preparing backup...");
     setDownloadError("");
     setDownloadSuccess(false);
 
     try {
-      const res = await fetch("/api/admin/backup");
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Failed to generate backup");
+      // 1. Fetch manifest to know all collections and counts
+      const manifestRes = await fetch("/api/admin/backup?manifest=true");
+      if (!manifestRes.ok) {
+        const data = await manifestRes.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to initialize backup manifest");
+      }
+      const manifest = await manifestRes.json();
+      const collectionsList: string[] = manifest.collectionsList || [];
+      const counts: Record<string, number> = manifest.counts || {};
+
+      const backupCollections: Record<string, unknown[]> = {};
+
+      // 2. Fetch each collection safely in chunks
+      for (const col of collectionsList) {
+        const total = counts[col] || 0;
+        if (total === 0) {
+          backupCollections[col] = [];
+          continue;
+        }
+
+        const batchSize = col === "products" || col === "mediaItems" ? 5 : 50;
+        const colItems: unknown[] = [];
+
+        for (let skip = 0; skip < total; skip += batchSize) {
+          setDownloadStatus(`Downloading ${col} (${Math.min(skip + batchSize, total)}/${total})...`);
+          const res = await fetch(`/api/admin/backup?collection=${col}&skip=${skip}&limit=${batchSize}`);
+          if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.error || `Failed to fetch collection ${col}`);
+          }
+          const chunkData = await res.json();
+          if (Array.isArray(chunkData.data)) {
+            colItems.push(...chunkData.data);
+          }
+        }
+
+        backupCollections[col] = colItems;
       }
 
-      const blob = await res.blob();
-      const contentDisposition = res.headers.get("Content-Disposition");
-      let filename = `nurshopbd_backup_${new Date().toISOString().slice(0, 10)}.json`;
-      if (contentDisposition) {
-        const match = contentDisposition.match(/filename="?([^"]+)"?/);
-        if (match && match[1]) filename = match[1];
-      }
+      setDownloadStatus("Compiling complete backup (.json)...");
+
+      const fullBackup = {
+        system: "NUR SHOP BD",
+        version: "1.0.0",
+        createdAt: new Date().toISOString(),
+        exportedBy: manifest.exportedBy,
+        counts: manifest.counts,
+        totalRecords: manifest.totalRecords,
+        collections: backupCollections,
+      };
+
+      const jsonStr = JSON.stringify(fullBackup, null, 2);
+      const blob = new Blob([jsonStr], { type: "application/json;charset=utf-8" });
+      const timestamp = new Date()
+        .toISOString()
+        .replace(/[:.]/g, "-")
+        .replace("T", "_")
+        .slice(0, 19);
+      const filename = `nurshopbd_backup_${timestamp}.json`;
 
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -85,6 +134,7 @@ export default function AdminBackupPage() {
       setDownloadError(err instanceof Error ? err.message : "Download failed");
     } finally {
       setDownloading(false);
+      setDownloadStatus("");
     }
   }
 
@@ -133,19 +183,36 @@ export default function AdminBackupPage() {
     if (!parsedBackup) return;
     setShowConfirmModal(false);
     setRestoring(true);
+    setRestoreStatus("Restoring database records...");
     setRestoreError("");
     setRestoreSuccess(false);
 
     try {
-      const res = await fetch("/api/admin/backup/restore", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ backup: parsedBackup, dryRun: false }),
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Restoration failed");
+      const collections = parsedBackup.collections as Record<string, unknown[]> | undefined;
+      if (collections && typeof collections === "object") {
+        for (const [colName, records] of Object.entries(collections)) {
+          if (!Array.isArray(records) || records.length === 0) continue;
+          setRestoreStatus(`Restoring ${colName} (${records.length} records)...`);
+          const res = await fetch("/api/admin/backup/restore", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ collection: colName, records, dryRun: false }),
+          });
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.error || `Failed restoring ${colName}`);
+          }
+        }
+      } else {
+        const res = await fetch("/api/admin/backup/restore", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ backup: parsedBackup, dryRun: false }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || "Restoration failed");
+        }
       }
 
       setRestoreSuccess(true);
@@ -156,6 +223,7 @@ export default function AdminBackupPage() {
       setRestoreError(err instanceof Error ? err.message : "Restoration failed");
     } finally {
       setRestoring(false);
+      setRestoreStatus("");
     }
   }
 
@@ -266,7 +334,9 @@ export default function AdminBackupPage() {
                 className="btn-orange flex items-center gap-2.5 px-6 py-3 text-xs font-bold uppercase tracking-wider shadow-md disabled:opacity-50"
               >
                 <FolderIcon size={16} />
-                {downloading ? "Compiling Backup Data..." : "Download Complete Backup (.json)"}
+                {downloading
+                  ? downloadStatus || "Compiling Backup Data..."
+                  : "Download Complete Backup (.json)"}
               </button>
             </div>
           </div>
@@ -374,7 +444,7 @@ export default function AdminBackupPage() {
                     onClick={() => setShowConfirmModal(true)}
                     className="btn-orange px-6 py-2.5 text-xs font-bold uppercase tracking-wider shadow-md disabled:opacity-50"
                   >
-                    {restoring ? "Restoring Records..." : "Proceed to Restore Data"}
+                    {restoring ? restoreStatus || "Restoring Records..." : "Proceed to Restore Data"}
                   </button>
                 </div>
               </div>
