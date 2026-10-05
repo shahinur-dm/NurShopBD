@@ -12,7 +12,7 @@ export async function GET(req: Request) {
       { success: true, categories },
       {
         headers: {
-          "Cache-Control": "no-store, max-age=0",
+          "Cache-Control": "public, max-age=60, s-maxage=60, stale-while-revalidate=300",
         },
       }
     );

@@ -104,14 +104,15 @@ const ProductSchema = new Schema<IProduct>(
     published: { type: Boolean, default: true },
     order: { type: Number, default: 0 },
   },
-  { timestamps: true }
+  { timestamps: true, autoIndex: false }
 );
 
 ProductSchema.index({ name: "text", shortDescription: "text", sku: "text" });
 ProductSchema.index({ published: 1, order: 1, featured: -1, createdAt: -1 });
+ProductSchema.index({ published: 1, featured: -1, order: 1, createdAt: -1 });
 ProductSchema.index({ order: 1, createdAt: -1 });
-ProductSchema.index({ category: 1, published: 1, order: 1 });
-ProductSchema.index({ subCategory: 1, published: 1, order: 1 });
+ProductSchema.index({ category: 1, published: 1, order: 1, featured: -1, createdAt: -1 });
+ProductSchema.index({ subCategory: 1, published: 1, order: 1, featured: -1, createdAt: -1 });
 ProductSchema.index({ featured: 1, published: 1 });
 
 export const Product =

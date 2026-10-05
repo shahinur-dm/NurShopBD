@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("admin@nurengineering.com");
-  const [password, setPassword] = useState("admin123456");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -74,7 +74,8 @@ export default function AdminLoginPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@nurengineering.com"
+              placeholder="Enter your email address"
+              autoComplete="email"
               className="mt-1.5 w-full rounded border border-white/20 bg-white/5 px-3.5 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-orange focus:bg-white/10"
             />
           </div>
@@ -88,7 +89,8 @@ export default function AdminLoginPage() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
+              placeholder="Enter your password"
+              autoComplete="current-password"
               className="mt-1.5 w-full rounded border border-white/20 bg-white/5 px-3.5 py-2.5 text-sm text-white placeholder:text-white/30 outline-none transition focus:border-orange focus:bg-white/10"
             />
           </div>
@@ -103,8 +105,8 @@ export default function AdminLoginPage() {
         </form>
 
         <div className="mt-6 border-t border-white/10 pt-4 text-center">
-          <p className="text-[11px] text-white/50">
-            Default credentials are prefilled for initial setup.
+          <p className="text-[11px] text-white/40 tracking-wide">
+            Protected Admin Management Portal • NUR SHOP BD
           </p>
         </div>
       </div>

@@ -5,6 +5,7 @@ import type { ISiteSettings, IUseCase } from "@/lib/models";
 import { OrderModalProvider } from "@/components/OrderModal";
 import { CartProvider } from "@/components/CartContext";
 import { CartDrawer } from "@/components/CartDrawer";
+import { StoreOpeningDoor } from "@/components/StoreOpeningDoor";
 
 type SiteContextValue = {
   settings: ISiteSettings;
@@ -73,6 +74,7 @@ export function SiteProvider({
     <SiteContext.Provider value={{ settings, useCases }}>
       <CartProvider>
         <OrderModalProvider>
+          <StoreOpeningDoor />
           {children}
           <CartDrawer />
         </OrderModalProvider>

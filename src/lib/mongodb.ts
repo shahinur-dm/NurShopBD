@@ -16,6 +16,9 @@ const cached: MongooseCache = globalThis.__nurshop_mongoose_cache ?? {
 
 globalThis.__nurshop_mongoose_cache = cached;
 
+mongoose.set("autoIndex", false);
+mongoose.set("bufferCommands", false);
+
 const DEFAULT_MONGODB_URI =
   "mongodb+srv://nextgen:nextgen2026@cluster0.qbunbkx.mongodb.net/NurShopBD?retryWrites=true&w=majority&appName=Cluster0";
 
@@ -28,6 +31,9 @@ export async function connectDB(): Promise<typeof mongoose | null> {
   if (!MONGODB_URI || !MONGODB_URI.startsWith("mongodb")) {
     MONGODB_URI = DEFAULT_MONGODB_URI;
   }
+  if (!MONGODB_URI.includes("readPreference=")) {
+    MONGODB_URI += (MONGODB_URI.includes("?") ? "&" : "?") + "readPreference=primary";
+  }
 
   if (cached.conn && mongoose.connection.readyState === 1) {
     return cached.conn;
@@ -35,14 +41,17 @@ export async function connectDB(): Promise<typeof mongoose | null> {
 
   if (!cached.promise) {
     const opts = {
-      bufferCommands: false,
       maxPoolSize: 10,
       minPoolSize: 1,
-      maxIdleTimeMS: 120_000,
-      serverSelectionTimeoutMS: 20_000,
-      connectTimeoutMS: 20_000,
+      maxConnecting: 3,
+      maxIdleTimeMS: 60_000,
+      serverSelectionTimeoutMS: 15_000,
+      connectTimeoutMS: 15_000,
       socketTimeoutMS: 45_000,
-      heartbeatFrequencyMS: 30_000,
+      heartbeatFrequencyMS: 15_000,
+      waitQueueTimeoutMS: 15_000,
+      readPreference: "primary" as const,
+      autoIndex: false,
       retryWrites: true,
       retryReads: true,
     };

@@ -1,3 +1,7 @@
+import mongoose from "mongoose";
+
+mongoose.set("autoIndex", false);
+
 export * from "./Category";
 export * from "./SubCategory";
 export * from "./Product";

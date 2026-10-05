@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
-import { getCategories, getSubCategories, getProducts } from "@/lib/data";
+import { getCategories, getSubCategories } from "@/lib/data";
 import { withCache } from "@/lib/cache";
+import { connectDB } from "@/lib/mongodb";
+import { Product } from "@/lib/models";
 
 export const dynamic = "force-dynamic";
 
@@ -10,8 +12,49 @@ export async function GET() {
       const [categories, subcategories, products] = await Promise.all([
         getCategories("product"),
         getSubCategories(),
-        getProducts(),
+        (async () => {
+          try {
+            await connectDB();
+            const docs = await Product.find({ published: true })
+              .select("_id name slug subCategory order")
+              .sort({ order: 1, featured: -1, createdAt: -1 })
+              .lean();
+            return docs || [];
+          } catch {
+            return [];
+          }
+        })(),
       ]);
+
+      // Index products by subCategory ID and slug in O(N) single pass
+      const prodsBySub = new Map<string, Array<{ _id: string; name: string; slug: string; image: string }>>();
+      for (const p of products) {
+        if (!p.subCategory) continue;
+        const subId = typeof p.subCategory === "object" && p.subCategory && "_id" in p.subCategory
+          ? String((p.subCategory as { _id: unknown })._id)
+          : String(p.subCategory);
+        const subSlug = typeof p.subCategory === "object" && p.subCategory && "slug" in p.subCategory
+          ? String((p.subCategory as { slug: unknown }).slug)
+          : "";
+
+        const item = {
+          _id: String(p._id),
+          name: p.name,
+          slug: p.slug,
+          image: "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=800&q=80",
+        };
+
+        if (subId) {
+          const list = prodsBySub.get(subId) || [];
+          list.push(item);
+          prodsBySub.set(subId, list);
+        }
+        if (subSlug && subSlug !== subId) {
+          const list = prodsBySub.get(subSlug) || [];
+          list.push(item);
+          prodsBySub.set(subSlug, list);
+        }
+      }
 
       const treeObj: Record<
         string,
@@ -49,23 +92,12 @@ export async function GET() {
           slug: cat.slug,
           subcategories: catSubs.map((sub) => {
             const subId = String(sub._id);
-            const subProds = products.filter(
-              (p) =>
-                p.subCategory &&
-                (String(p.subCategory._id) === subId || p.subCategory.slug === sub.slug)
-            );
+            const subProds = prodsBySub.get(subId) || prodsBySub.get(sub.slug) || [];
             return {
               _id: subId,
               name: sub.name,
               slug: sub.slug,
-              products: subProds.map((p) => ({
-                _id: String(p._id),
-                name: p.name,
-                slug: p.slug,
-                image:
-                  p.image ||
-                  "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=800&q=80",
-              })),
+              products: subProds,
             };
           }),
         };

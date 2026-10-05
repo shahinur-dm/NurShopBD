@@ -26,10 +26,10 @@ const CategorySchema = new Schema<ICategory>(
     image: String,
     order: { type: Number, default: 0 },
   },
-  { timestamps: true }
+  { timestamps: true, autoIndex: false }
 );
 
-CategorySchema.index({ type: 1, order: 1 });
+CategorySchema.index({ type: 1, order: 1, name: 1 });
 
 export const Category =
   models.Category || model<ICategory>("Category", CategorySchema);

@@ -123,6 +123,16 @@ const navGroups: NavGroup[] = [
   {
     title: "ADMINISTRATION",
     entries: [
+      {
+        type: "accordion",
+        label: "Backup & Restore",
+        baseHref: "/admin/backup",
+        Icon: SlidersIcon,
+        children: [
+          { label: "Download Backup", href: "/admin/backup?tab=download", Icon: FolderIcon },
+          { label: "Restore Backup", href: "/admin/backup?tab=restore", Icon: SlidersIcon },
+        ],
+      },
       { type: "link", label: "User Management", href: "/admin/users", Icon: UsersIcon },
       { type: "link", label: "Activity Logs", href: "/admin/logs", Icon: ActivityIcon },
     ],
@@ -144,11 +154,24 @@ export function AdminSidebar({
   const searchParams = useSearchParams();
   const currentTab = searchParams.get("tab") || "branding";
 
-  // Auto-expand settings accordion if user is currently on settings page
+  // Auto-expand accordions if active
   const isSettingsActive = pathname.startsWith("/admin/settings");
-  const [settingsOpen, setSettingsOpen] = useState(true);
+  const isBackupActive = pathname.startsWith("/admin/backup");
+  const [openAccordions, setOpenAccordions] = useState<Record<string, boolean>>({
+    "Website Settings": true,
+    "Backup & Restore": true,
+  });
   const [logoUrl, setLogoUrl] = useState<string>("");
   const [pickerOpen, setPickerOpen] = useState(false);
+
+  useEffect(() => {
+    if (isSettingsActive) {
+      setOpenAccordions((prev) => ({ ...prev, "Website Settings": true }));
+    }
+    if (isBackupActive) {
+      setOpenAccordions((prev) => ({ ...prev, "Backup & Restore": true }));
+    }
+  }, [isSettingsActive, isBackupActive]);
 
   useEffect(() => {
     fetch("/api/admin/settings")
@@ -178,12 +201,6 @@ export function AdminSidebar({
       console.error("Failed to update logo:", err);
     }
   }
-
-  useEffect(() => {
-    if (isSettingsActive) {
-      setSettingsOpen(true);
-    }
-  }, [isSettingsActive]);
 
   return (
     <>
@@ -297,16 +314,17 @@ export function AdminSidebar({
                     );
                   }
 
-                  // Accordion Menu (Website Settings)
+                  // Accordion Menu (Website Settings, Backup & Restore)
                   if (entry.type === "accordion") {
                     const GroupIcon = entry.Icon;
                     const isGroupActive = pathname.startsWith(entry.baseHref);
+                    const isOpen = openAccordions[entry.label] ?? false;
 
                     return (
                       <div key={entry.label} className="space-y-1">
                         {collapsed ? (
                           <Link
-                            href="/admin/settings?tab=branding"
+                            href={entry.children[0]?.href || entry.baseHref}
                             onClick={onMobileClose}
                             className={`group flex w-full items-center justify-center rounded-md px-3 py-2 text-xs font-medium transition ${
                               isGroupActive
@@ -325,9 +343,14 @@ export function AdminSidebar({
                         ) : (
                           <button
                             type="button"
-                            onClick={() => setSettingsOpen((prev) => !prev)}
+                            onClick={() =>
+                              setOpenAccordions((prev) => ({
+                                ...prev,
+                                [entry.label]: !prev[entry.label],
+                              }))
+                            }
                             className={`group flex w-full items-center justify-between rounded-md px-3 py-2 text-xs font-medium transition ${
-                              isGroupActive && !settingsOpen
+                              isGroupActive && !isOpen
                                 ? "bg-orange/20 text-orange font-semibold border border-orange/40"
                                 : isGroupActive
                                 ? "bg-white/10 text-white font-semibold"
@@ -347,14 +370,14 @@ export function AdminSidebar({
                             <ChevronDownIcon
                               size={14}
                               className={`shrink-0 text-white/50 transition-transform duration-200 ${
-                                settingsOpen ? "rotate-180 text-white" : ""
+                                isOpen ? "rotate-180 text-white" : ""
                               }`}
                             />
                           </button>
                         )}
 
                         {/* Collapsible Submenu */}
-                        {!collapsed && settingsOpen && (
+                        {!collapsed && isOpen && (
                           <div className="ml-3.5 space-y-0.5 border-l border-white/15 pl-2.5 pt-1">
                             {entry.children.map((child) => {
                               const ChildIcon = child.Icon;
@@ -363,7 +386,7 @@ export function AdminSidebar({
                                 "http://local"
                               ).searchParams.get("tab");
                               const isChildActive =
-                                isSettingsActive && currentTab === targetTab;
+                                isGroupActive && currentTab === targetTab;
 
                               return (
                                 <Link

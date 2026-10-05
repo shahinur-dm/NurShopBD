@@ -425,14 +425,14 @@ export const getCategories = reactCache(async function getCategories(
       if (db) {
         const filter: Record<string, unknown> = {};
         if (type === "product") {
-          filter.$or = [{ type: "product" }, { type: { $exists: false } }, { type: null }];
+          filter.type = "product";
         } else if (type === "service") {
           filter.type = "service";
         }
         const docs = await Category.find(filter)
           .sort({ order: 1, name: 1 })
           .lean<ICategory[]>();
-        if (docs) {
+        if (docs && docs.length > 0) {
           return serialize(docs);
         }
       }
@@ -452,7 +452,7 @@ export const getSubCategories = reactCache(async function getSubCategories(
     try {
       const db = await connectDB();
       if (db) {
-        const filter: Record<string, unknown> = { published: { $ne: false } };
+        const filter: Record<string, unknown> = { published: true };
         if (categorySlugOrId) {
           const allCats = await getCategories("product");
           const cat = allCats.find(
@@ -462,11 +462,10 @@ export const getSubCategories = reactCache(async function getSubCategories(
               c.name.toLowerCase() === categorySlugOrId.replace(/-/g, " ").toLowerCase()
           );
           if (cat) {
-            filter.$or = [
-              { category: cat._id },
-              { category: String(cat._id) },
-              { category: cat.slug },
-            ];
+            const catObjId = mongoose.Types.ObjectId.isValid(String(cat._id))
+              ? new mongoose.Types.ObjectId(String(cat._id))
+              : cat._id;
+            filter.category = catObjId;
           } else if (mongoose.Types.ObjectId.isValid(categorySlugOrId)) {
             filter.category = new mongoose.Types.ObjectId(categorySlugOrId);
           } else {
@@ -517,7 +516,7 @@ export const getBrands = reactCache(async function getBrands(): Promise<IBrand[]
     try {
       const db = await connectDB();
       if (db) {
-        const docs = await Brand.find({ active: { $ne: false } })
+        const docs = await Brand.find({ active: true })
           .sort({ order: 1, name: 1 })
           .lean<IBrand[]>();
         if (docs) {
@@ -573,7 +572,7 @@ export const getServices = reactCache(async function getServices(opts?: {
     try {
       const db = await connectDB();
       if (db) {
-        const filter: Record<string, unknown> = { published: { $ne: false } };
+        const filter: Record<string, unknown> = { published: true };
         if (opts?.featured) filter.featured = true;
         const docs = await Service.find(filter)
           .populate("category")
@@ -598,7 +597,7 @@ export const getFeatures = reactCache(async function getFeatures(): Promise<IFea
     try {
       const db = await connectDB();
       if (db) {
-        const docs = await Feature.find({ active: { $ne: false } })
+        const docs = await Feature.find({ active: true })
           .sort({ order: 1, _id: 1 })
           .lean<IFeature[]>();
         if (docs && docs.length > 0) {
@@ -684,7 +683,7 @@ export const getProducts = reactCache(async function getProducts(opts?: {
     try {
       const db = await connectDB();
       if (db) {
-        const filter: Record<string, unknown> = { published: { $ne: false } };
+        const filter: Record<string, unknown> = { published: true };
         if (opts?.featured) filter.featured = true;
 
         if (opts?.categorySlug) {
@@ -696,11 +695,9 @@ export const getProducts = reactCache(async function getProducts(opts?: {
               c.name.toLowerCase() === opts.categorySlug?.replace(/-/g, " ").toLowerCase()
           );
           if (catDoc) {
-            filter.$or = [
-              { category: catDoc._id },
-              { category: String(catDoc._id) },
-              { category: catDoc.slug },
-            ];
+            filter.category = mongoose.Types.ObjectId.isValid(String(catDoc._id))
+              ? new mongoose.Types.ObjectId(String(catDoc._id))
+              : catDoc._id;
           } else {
             return [];
           }
@@ -715,19 +712,9 @@ export const getProducts = reactCache(async function getProducts(opts?: {
               s.name.toLowerCase() === opts.subCategorySlug?.replace(/-/g, " ").toLowerCase()
           );
           if (subDoc) {
-            const subCondition = {
-              $or: [
-                { subCategory: subDoc._id },
-                { subCategory: String(subDoc._id) },
-                { subCategory: subDoc.slug },
-              ],
-            };
-            if (filter.$or) {
-              filter.$and = [{ $or: filter.$or }, subCondition];
-              delete filter.$or;
-            } else {
-              filter.$or = subCondition.$or;
-            }
+            filter.subCategory = mongoose.Types.ObjectId.isValid(String(subDoc._id))
+              ? new mongoose.Types.ObjectId(String(subDoc._id))
+              : subDoc._id;
           } else {
             return [];
           }
@@ -735,28 +722,18 @@ export const getProducts = reactCache(async function getProducts(opts?: {
 
         if (opts?.q) {
           const qRegex = { $regex: opts.q, $options: "i" };
-          const qCondition = {
-            $or: [
-              { name: qRegex },
-              { shortDescription: qRegex },
-              { description: qRegex },
-              { sku: qRegex },
-              { brand: qRegex },
-            ],
-          };
-          if (filter.$and) {
-            (filter.$and as unknown[]).push(qCondition);
-          } else if (filter.$or) {
-            filter.$and = [{ $or: filter.$or }, qCondition];
-            delete filter.$or;
-          } else {
-            filter.$or = qCondition.$or;
-          }
+          filter.$or = [
+            { name: qRegex },
+            { shortDescription: qRegex },
+            { description: qRegex },
+            { sku: qRegex },
+            { brand: qRegex },
+          ];
         }
 
         let query = Product.find(filter)
           .select("name slug sku itemNameModel brand category subCategory shortDescription price currency image inStock featured published order createdAt deliveryTime options variants")
-          .sort({ order: 1, featured: -1, createdAt: -1 });
+          .sort(opts?.featured ? { featured: -1, order: 1, createdAt: -1 } : { order: 1, featured: -1, createdAt: -1 });
 
         if (opts?.page && opts?.limit) {
           query = query.skip((opts.page - 1) * opts.limit).limit(opts.limit);
@@ -774,13 +751,6 @@ export const getProducts = reactCache(async function getProducts(opts?: {
             catMap.set(c.slug, c);
           }
 
-          const allSubs = await getSubCategories();
-          const subMap = new Map<string, ISubCategory>();
-          for (const s of allSubs) {
-            subMap.set(String(s._id), s);
-            subMap.set(s.slug, s);
-          }
-
           const populated = rawDocs.map((p) => {
             let cat = p.category;
             if (!cat || typeof cat !== "object" || !("name" in cat)) {
@@ -793,16 +763,10 @@ export const getProducts = reactCache(async function getProducts(opts?: {
               } as unknown as ICategory);
             }
 
-            let sub = p.subCategory;
-            if (sub && (typeof sub !== "object" || !("name" in sub))) {
-              const subRef = String(sub);
-              sub = subMap.get(subRef) || null;
-            }
-
             return {
               ...p,
               category: cat,
-              subCategory: sub,
+              subCategory: p.subCategory || null,
               relatedServices: p.relatedServices || [],
             };
           });
@@ -862,7 +826,7 @@ export const getProductsTotalCount = reactCache(async function getProductsTotalC
     try {
       const db = await connectDB();
       if (db) {
-        const filter: Record<string, unknown> = { published: { $ne: false } };
+        const filter: Record<string, unknown> = { published: true };
         if (opts?.featured) filter.featured = true;
 
         if (opts?.categorySlug) {
@@ -874,11 +838,9 @@ export const getProductsTotalCount = reactCache(async function getProductsTotalC
               c.name.toLowerCase() === opts.categorySlug?.replace(/-/g, " ").toLowerCase()
           );
           if (catDoc) {
-            filter.$or = [
-              { category: catDoc._id },
-              { category: String(catDoc._id) },
-              { category: catDoc.slug },
-            ];
+            filter.category = mongoose.Types.ObjectId.isValid(String(catDoc._id))
+              ? new mongoose.Types.ObjectId(String(catDoc._id))
+              : catDoc._id;
           } else {
             return 0;
           }
@@ -893,19 +855,9 @@ export const getProductsTotalCount = reactCache(async function getProductsTotalC
               s.name.toLowerCase() === opts.subCategorySlug?.replace(/-/g, " ").toLowerCase()
           );
           if (subDoc) {
-            const subCondition = {
-              $or: [
-                { subCategory: subDoc._id },
-                { subCategory: String(subDoc._id) },
-                { subCategory: subDoc.slug },
-              ],
-            };
-            if (filter.$or) {
-              filter.$and = [{ $or: filter.$or }, subCondition];
-              delete filter.$or;
-            } else {
-              filter.$or = subCondition.$or;
-            }
+            filter.subCategory = mongoose.Types.ObjectId.isValid(String(subDoc._id))
+              ? new mongoose.Types.ObjectId(String(subDoc._id))
+              : subDoc._id;
           } else {
             return 0;
           }
@@ -913,23 +865,13 @@ export const getProductsTotalCount = reactCache(async function getProductsTotalC
 
         if (opts?.q) {
           const qRegex = { $regex: opts.q, $options: "i" };
-          const qCondition = {
-            $or: [
-              { name: qRegex },
-              { shortDescription: qRegex },
-              { description: qRegex },
-              { sku: qRegex },
-              { brand: qRegex },
-            ],
-          };
-          if (filter.$and) {
-            (filter.$and as unknown[]).push(qCondition);
-          } else if (filter.$or) {
-            filter.$and = [{ $or: filter.$or }, qCondition];
-            delete filter.$or;
-          } else {
-            filter.$or = qCondition.$or;
-          }
+          filter.$or = [
+            { name: qRegex },
+            { shortDescription: qRegex },
+            { description: qRegex },
+            { sku: qRegex },
+            { brand: qRegex },
+          ];
         }
 
         return await Product.countDocuments(filter);
@@ -950,22 +892,49 @@ export const getProductBySlug = reactCache(async function getProductBySlug(
       const db = await connectDB();
       if (db) {
         const decodedSlug = decodeURIComponent(slug).trim();
-        const slugRegex = new RegExp(`^${decodedSlug}$`, "i");
+        const slugLower = decodedSlug.toLowerCase();
 
+        // 1. Exact match on unique slug index (fastest IXSCAN)
         let doc = await Product.findOne({
-          $or: [
-            { slug: decodedSlug },
-            { slug: slugRegex },
-            { sku: decodedSlug },
-            { sku: slugRegex },
-          ],
-          published: { $ne: false },
+          slug: slugLower,
+          published: true,
         })
           .populate("relatedServices")
           .lean<PopulatedProduct | null>();
 
+        if (!doc && decodedSlug !== slugLower) {
+          doc = await Product.findOne({
+            slug: decodedSlug,
+            published: true,
+          })
+            .populate("relatedServices")
+            .lean<PopulatedProduct | null>();
+        }
+
+        // 2. Exact match on SKU index
+        if (!doc) {
+          doc = await Product.findOne({
+            sku: decodedSlug,
+            published: true,
+          })
+            .populate("relatedServices")
+            .lean<PopulatedProduct | null>();
+        }
+
+        // 3. Match on ObjectId if valid
         if (!doc && mongoose.Types.ObjectId.isValid(decodedSlug)) {
-          doc = await Product.findOne({ _id: decodedSlug, published: { $ne: false } })
+          doc = await Product.findOne({ _id: decodedSlug, published: true })
+            .populate("relatedServices")
+            .lean<PopulatedProduct | null>();
+        }
+
+        // 4. Case-insensitive regex fallback only when exact matches not found
+        if (!doc) {
+          const slugRegex = new RegExp(`^${decodedSlug.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i");
+          doc = await Product.findOne({
+            $or: [{ slug: slugRegex }, { sku: slugRegex }],
+            published: true,
+          })
             .populate("relatedServices")
             .lean<PopulatedProduct | null>();
         }
@@ -1025,23 +994,18 @@ export async function getRelatedProducts(
     try {
       const db = await connectDB();
       if (db) {
-        let catFilter: Record<string, unknown> = { category: categoryId };
-        if (mongoose.Types.ObjectId.isValid(categoryId)) {
-          catFilter = {
-            $or: [
-              { category: new mongoose.Types.ObjectId(categoryId) },
-              { category: categoryId },
-            ],
-          };
-        }
+        const catTarget = mongoose.Types.ObjectId.isValid(categoryId)
+          ? new mongoose.Types.ObjectId(categoryId)
+          : categoryId;
 
         const [primaryDocs, allCats, allSubs] = await Promise.all([
           Product.find({
-            ...catFilter,
+            category: catTarget,
             slug: { $ne: excludeSlug },
-            published: { $ne: false },
+            published: true,
           })
-            .sort({ order: 1, _id: 1 })
+            .select("name slug sku itemNameModel brand category subCategory shortDescription price currency image inStock featured published order createdAt deliveryTime options variants")
+            .sort({ order: 1, featured: -1, createdAt: -1 })
             .limit(limit)
             .lean<PopulatedProduct[]>(),
           getCategories("product"),
@@ -1093,9 +1057,10 @@ export async function getRelatedProducts(
         const fallbackDocs = await Product.find({
           _id: { $nin: existingIds.length ? existingIds : [null] },
           slug: { $ne: excludeSlug },
-          published: { $ne: false },
+          published: true,
         })
-          .sort({ featured: -1, order: 1, _id: 1 })
+          .select("name slug sku itemNameModel brand category subCategory shortDescription price currency image inStock featured published order createdAt deliveryTime options variants")
+          .sort({ featured: -1, order: 1, createdAt: -1 })
           .limit(extraNeeded)
           .lean<PopulatedProduct[]>();
 
