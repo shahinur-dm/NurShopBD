@@ -19,20 +19,16 @@ globalThis.__nurshop_mongoose_cache = cached;
 mongoose.set("autoIndex", false);
 mongoose.set("bufferCommands", false);
 
-const DEFAULT_MONGODB_URI =
-  "mongodb+srv://nurshop:nurshopbdnet@cluster0.1hwyova.mongodb.net/NurShopBD?retryWrites=true&w=majority&appName=Cluster0";
-
-/**
- * Next.js database connection manager.
- * Single persistent connection instance reused across all requests.
- */
 export async function connectDB(): Promise<typeof mongoose | null> {
-  let MONGODB_URI = process.env.MONGODB_URI || DEFAULT_MONGODB_URI;
-  if (!MONGODB_URI || !MONGODB_URI.startsWith("mongodb")) {
-    MONGODB_URI = DEFAULT_MONGODB_URI;
+  const uri = process.env.MONGODB_URI?.trim();
+  if (!uri || !uri.startsWith("mongodb")) {
+    console.error("MONGODB_URI environment variable is not defined or invalid.");
+    return null;
   }
-  if (!MONGODB_URI.includes("readPreference=")) {
-    MONGODB_URI += (MONGODB_URI.includes("?") ? "&" : "?") + "readPreference=primary";
+
+  let finalUri = uri;
+  if (!finalUri.includes("readPreference=")) {
+    finalUri += (finalUri.includes("?") ? "&" : "?") + "readPreference=primary";
   }
 
   if (cached.conn && mongoose.connection.readyState === 1) {
@@ -57,27 +53,15 @@ export async function connectDB(): Promise<typeof mongoose | null> {
     };
 
     cached.promise = mongoose
-      .connect(MONGODB_URI, opts)
+      .connect(finalUri, opts)
       .then((m) => {
         cached.conn = m;
         return m;
       })
-      .catch(async (err) => {
-        // If custom URI failed and is different from DEFAULT_MONGODB_URI, fallback to DEFAULT
-        if (MONGODB_URI !== DEFAULT_MONGODB_URI) {
-          console.warn("Primary MongoDB URI failed, attempting default connection fallback...", err.message);
-          try {
-            const fallbackConn = await mongoose.connect(DEFAULT_MONGODB_URI, opts);
-            cached.conn = fallbackConn;
-            return fallbackConn;
-          } catch (fallbackErr) {
-            cached.promise = null;
-            cached.conn = null;
-            throw fallbackErr;
-          }
-        }
+      .catch((err) => {
         cached.promise = null;
         cached.conn = null;
+        console.error("MongoDB connection error:", err.message);
         throw err;
       });
   }
@@ -88,7 +72,6 @@ export async function connectDB(): Promise<typeof mongoose | null> {
   } catch (err) {
     cached.promise = null;
     cached.conn = null;
-    console.error("MongoDB connection error:", err);
     return null;
   }
 }
