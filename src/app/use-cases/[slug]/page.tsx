@@ -12,7 +12,9 @@ import {
   getServiceBySlug,
   getUseCaseBySlug,
   getUseCases,
+  getSettings,
 } from "@/lib/data";
+import { buildPageMetadata } from "@/lib/seo";
 
 export const revalidate = 60;
 
@@ -22,12 +24,18 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const item = await getUseCaseBySlug(slug);
+  const [item, site] = await Promise.all([
+    getUseCaseBySlug(slug),
+    getSettings(),
+  ]);
   if (!item) return { title: "Our Services" };
-  return {
+  return buildPageMetadata({
+    site,
     title: item.title,
     description: item.summary,
-  };
+    path: `/use-cases/${slug}`,
+    image: item.image,
+  });
 }
 
 export default async function UseCaseDetailPage({

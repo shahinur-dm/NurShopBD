@@ -7,7 +7,9 @@ import {
   getBlogPostBySlug,
   getRelatedBlogPosts,
   getBlogPosts,
+  getSettings,
 } from "@/lib/data";
+import { buildPageMetadata } from "@/lib/seo";
 
 export const revalidate = 60;
 
@@ -17,14 +19,20 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const post = await getBlogPostBySlug(slug);
+  const [post, site] = await Promise.all([
+    getBlogPostBySlug(slug),
+    getSettings(),
+  ]);
   if (!post) {
     return { title: "Article Not Found | NUR SHOP BD" };
   }
-  return {
-    title: `${post.title} | NUR SHOP BD Blog`,
+  return buildPageMetadata({
+    site,
+    title: post.title,
     description: post.summary,
-  };
+    path: `/blog/${slug}`,
+    image: post.coverImage,
+  });
 }
 
 export default async function BlogDetailsPage({

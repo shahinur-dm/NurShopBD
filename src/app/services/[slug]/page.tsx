@@ -8,8 +8,10 @@ import { RelatedSearch } from "@/components/RelatedSearch";
 import {
   getCategories,
   getServiceBySlug,
+  getSettings,
 } from "@/lib/data";
 import type { PopulatedProduct } from "@/lib/data";
+import { buildPageMetadata } from "@/lib/seo";
 
 export const revalidate = 60;
 
@@ -19,9 +21,18 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const service = await getServiceBySlug(slug);
+  const [service, site] = await Promise.all([
+    getServiceBySlug(slug),
+    getSettings(),
+  ]);
   if (!service) return { title: "Technical services" };
-  return { title: service.title, description: service.shortDescription };
+  return buildPageMetadata({
+    site,
+    title: service.title,
+    description: service.shortDescription,
+    path: `/services/${slug}`,
+    image: service.image,
+  });
 }
 
 export default async function ServiceDetailPage({

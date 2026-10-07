@@ -131,16 +131,17 @@ export const fallbackSettings: ISiteSettings = {
   },
   seo: {
     defaultTitle:
-      "NUR SHOP BD | Machine Parts & Technical Service",
+      "NUR SHOP BD - Industrial Machinery, PLC Automation & Spare Parts",
     defaultDescription:
-      "Buy PLC, motors, VFD, sensors, contactors and industrial spare parts. Technical service from an EEE engineering desk in Bangladesh.",
+      "Buy machine spare parts, industrial automation equipment, PLC conversion, servo systems, and technical support services in Bangladesh from NUR SHOP BD.",
     keywords: [
-      "PLC Bangladesh",
-      "machine parts",
-      "VFD",
-      "motors",
-      "sensors",
-      "EEE spare parts",
+      "Industrial Machinery Bangladesh",
+      "PLC Automation Bangladesh",
+      "machine spare parts",
+      "PLC conversion",
+      "servo systems",
+      "technical support services",
+      "NUR SHOP BD",
     ],
   },
   analytics: {},

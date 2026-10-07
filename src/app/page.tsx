@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { CatalogShell } from "@/components/CatalogShell";
 import { HeroSlider } from "@/components/HeroSlider";
 import { SpecialFeaturesSection } from "@/components/SpecialFeaturesSection";
@@ -10,9 +11,75 @@ import {
   getProductsTotalCount,
   getServices,
   getFeatures,
+  getSettings,
 } from "@/lib/data";
+import { getSiteUrl, toAbsoluteUrl } from "@/lib/seo";
 
 export const revalidate = 60;
+
+export async function generateMetadata(): Promise<Metadata> {
+  const site = await getSettings();
+  const url = getSiteUrl();
+  const title = "NUR SHOP BD - Industrial Machinery, PLC Automation & Spare Parts";
+  const description =
+    "Buy machine spare parts, industrial automation equipment, PLC conversion, servo systems, and technical support services in Bangladesh from NUR SHOP BD.";
+  const ogImage = site.logoUrl ? toAbsoluteUrl(site.logoUrl) : `${url}/opengraph-image`;
+  const brand = site.brandName || "NUR SHOP BD";
+
+  return {
+    title: {
+      absolute: title,
+    },
+    description,
+    keywords: site.seo?.keywords?.length
+      ? site.seo.keywords
+      : [
+          "Industrial Machinery Bangladesh",
+          "PLC Automation Bangladesh",
+          "machine spare parts",
+          "PLC conversion",
+          "servo systems",
+          "technical support services",
+          "NUR SHOP BD",
+        ],
+    alternates: {
+      canonical: url,
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-video-preview": -1,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+      },
+    },
+    openGraph: {
+      type: "website",
+      locale: "en_BD",
+      url,
+      siteName: brand,
+      title,
+      description,
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [ogImage],
+    },
+  };
+}
 
 export default async function HomePage({
   searchParams,
