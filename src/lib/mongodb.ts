@@ -20,7 +20,7 @@ mongoose.set("autoIndex", false);
 mongoose.set("bufferCommands", false);
 
 const DEFAULT_MONGODB_URI =
-  "mongodb+srv://nextgen:nextgen2026@cluster0.qbunbkx.mongodb.net/NurShopBD?retryWrites=true&w=majority&appName=Cluster0";
+  "mongodb+srv://nurshop:nurshopbdnet@cluster0.1hwyova.mongodb.net/NurShopBD?retryWrites=true&w=majority&appName=Cluster0";
 
 /**
  * Next.js database connection manager.
