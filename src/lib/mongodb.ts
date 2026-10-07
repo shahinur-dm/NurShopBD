@@ -69,7 +69,7 @@ export async function connectDB(): Promise<typeof mongoose | null> {
   try {
     cached.conn = await cached.promise;
     return cached.conn;
-  } catch (err) {
+  } catch {
     cached.promise = null;
     cached.conn = null;
     return null;
