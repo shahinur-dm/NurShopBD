@@ -34,8 +34,7 @@ export const viewport: Viewport = {
 };
 
 export async function generateMetadata(): Promise<Metadata> {
-  const site = await getSettings();
-  const url = getSiteUrl();
+  const [site, url] = await Promise.all([getSettings(), getSiteUrl()]);
   const { searchConsole } = getAnalyticsIds(site);
   const brand = site.brandName || "NUR SHOP BD";
   const defaultTitle =
@@ -43,7 +42,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const defaultDescription =
     site.seo?.defaultDescription ||
     "Buy machine spare parts, industrial automation equipment, PLC conversion, servo systems, and technical support services in Bangladesh from NUR SHOP BD.";
-  const ogImage = HOMEPAGE_OG_BANNER;
+  const ogImage = `${url}/nurshopbd-banner.png`;
 
   return {
     metadataBase: new URL(url),

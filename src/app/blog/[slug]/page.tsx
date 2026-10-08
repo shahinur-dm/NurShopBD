@@ -9,7 +9,7 @@ import {
   getBlogPosts,
   getSettings,
 } from "@/lib/data";
-import { buildPageMetadata } from "@/lib/seo";
+import { buildPageMetadata, getSiteUrl } from "@/lib/seo";
 
 export const revalidate = 60;
 
@@ -19,9 +19,10 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const [post, site] = await Promise.all([
+  const [post, site, baseUrl] = await Promise.all([
     getBlogPostBySlug(slug),
     getSettings(),
+    getSiteUrl(),
   ]);
   if (!post) {
     return { title: "Article Not Found | NUR SHOP BD" };
@@ -32,6 +33,7 @@ export async function generateMetadata({
     description: post.summary,
     path: `/blog/${slug}`,
     image: post.coverImage,
+    baseUrl,
   });
 }
 

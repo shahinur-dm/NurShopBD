@@ -3,7 +3,7 @@ import { getProducts, getServices, getUseCases } from "@/lib/data";
 import { getSiteUrl } from "@/lib/seo";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = getSiteUrl();
+  const base = await getSiteUrl();
   const now = new Date();
   const staticEntries: MetadataRoute.Sitemap = [
     "",

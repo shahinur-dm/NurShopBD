@@ -4,18 +4,19 @@ import { CatalogShell } from "@/components/CatalogShell";
 import { RelatedSearch } from "@/components/RelatedSearch";
 import { ServiceCard } from "@/components/ServiceCard";
 import { getCategories, getServices, getSettings } from "@/lib/data";
-import { buildPageMetadata } from "@/lib/seo";
+import { buildPageMetadata, getSiteUrl } from "@/lib/seo";
 
 export const revalidate = 60;
 
 export async function generateMetadata(): Promise<Metadata> {
-  const site = await getSettings();
+  const [site, baseUrl] = await Promise.all([getSettings(), getSiteUrl()]);
   return buildPageMetadata({
     site,
     title: "Technical services",
     description:
       "PLC support, motor-drive matching, panel parts kits and spare-parts sourcing.",
     path: "/services",
+    baseUrl,
   });
 }
 

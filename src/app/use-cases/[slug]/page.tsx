@@ -14,7 +14,7 @@ import {
   getUseCases,
   getSettings,
 } from "@/lib/data";
-import { buildPageMetadata } from "@/lib/seo";
+import { buildPageMetadata, getSiteUrl } from "@/lib/seo";
 
 export const revalidate = 60;
 
@@ -24,9 +24,10 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const [item, site] = await Promise.all([
+  const [item, site, baseUrl] = await Promise.all([
     getUseCaseBySlug(slug),
     getSettings(),
+    getSiteUrl(),
   ]);
   if (!item) return { title: "Our Services" };
   return buildPageMetadata({
@@ -35,6 +36,7 @@ export async function generateMetadata({
     description: item.summary,
     path: `/use-cases/${slug}`,
     image: item.image,
+    baseUrl,
   });
 }
 

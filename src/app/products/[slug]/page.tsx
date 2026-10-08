@@ -25,12 +25,13 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const [product, site] = await Promise.all([
+  const [product, site, baseUrl] = await Promise.all([
     getProductBySlug(slug),
     getSettings(),
+    getSiteUrl(),
   ]);
   if (!product) return { title: "Product Not Found" };
-  return buildProductMetadata({ site, product });
+  return buildProductMetadata({ site, product, baseUrl });
 }
 
 export default async function ProductDetailPage({
@@ -52,10 +53,11 @@ export default async function ProductDetailPage({
   const categoryName =
     typeof product.category === "object" ? product.category.name : "Category";
 
-  const [categories, related, siteSettings] = await Promise.all([
+  const [categories, related, siteSettings, siteUrl] = await Promise.all([
     getCategories("product"),
     getRelatedProducts(categoryId, product.slug, 15),
     getSettings(),
+    getSiteUrl(),
   ]);
 
   const phone = siteSettings?.social?.whatsapp || siteSettings?.phone || "+8801713798987";
@@ -67,10 +69,9 @@ export default async function ProductDetailPage({
     !isNaN(Number(product.price)) &&
     Number(product.price) > 0;
 
-  const siteUrl = getSiteUrl();
   const productAbsoluteImage = product.image
-    ? toAbsoluteUrl(product.image)
-    : HOMEPAGE_OG_BANNER;
+    ? toAbsoluteUrl(product.image, siteUrl)
+    : `${siteUrl}/nurshopbd-banner.png`;
 
   const productJsonLd = {
     "@context": "https://schema.org",

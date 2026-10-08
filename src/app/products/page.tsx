@@ -4,7 +4,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { SubCategoryBar } from "@/components/SubCategoryBar";
 import { RelatedSearch } from "@/components/RelatedSearch";
 import { getCategories, getSubCategories, getProducts, getSettings } from "@/lib/data";
-import { buildPageMetadata } from "@/lib/seo";
+import { buildPageMetadata, getSiteUrl } from "@/lib/seo";
 
 export const revalidate = 60;
 
@@ -14,7 +14,7 @@ export async function generateMetadata({
   searchParams: Promise<{ category?: string; subcategory?: string; q?: string }>;
 }): Promise<Metadata> {
   const sp = await searchParams;
-  const site = await getSettings();
+  const [site, baseUrl] = await Promise.all([getSettings(), getSiteUrl()]);
   const title = sp.q
     ? `Search: ${sp.q}`
     : sp.subcategory
@@ -27,6 +27,7 @@ export async function generateMetadata({
     title,
     description: "Industrial machine parts catalog — PLC, motors, VFD, sensors and spares.",
     path: "/products",
+    baseUrl,
   });
 }
 

@@ -11,7 +11,7 @@ import {
   getSettings,
 } from "@/lib/data";
 import type { PopulatedProduct } from "@/lib/data";
-import { buildPageMetadata } from "@/lib/seo";
+import { buildPageMetadata, getSiteUrl } from "@/lib/seo";
 
 export const revalidate = 60;
 
@@ -21,9 +21,10 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const [service, site] = await Promise.all([
+  const [service, site, baseUrl] = await Promise.all([
     getServiceBySlug(slug),
     getSettings(),
+    getSiteUrl(),
   ]);
   if (!service) return { title: "Technical services" };
   return buildPageMetadata({
@@ -32,6 +33,7 @@ export async function generateMetadata({
     description: service.shortDescription,
     path: `/services/${slug}`,
     image: service.image,
+    baseUrl,
   });
 }
 

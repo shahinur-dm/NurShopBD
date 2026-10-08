@@ -1,38 +1,66 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import type { ISiteSettings } from "@/lib/models";
 
-export const OFFICIAL_DOMAIN = "https://nurshopbd.net";
-export const HOMEPAGE_OG_BANNER = `${OFFICIAL_DOMAIN}/nurshopbd-banner.png`;
+export const DEFAULT_PRODUCTION_DOMAIN = "https://nurshopbd.net";
+export const VERCEL_DOMAIN = "https://nurshopbd.vercel.app";
+export const HOMEPAGE_OG_BANNER = `${DEFAULT_PRODUCTION_DOMAIN}/nurshopbd-banner.png`;
 
-export function getSiteUrl(): string {
+export function getDefaultSiteUrl(): string {
   const envUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
   if (envUrl) {
-    if (envUrl.includes("nurshopbd.xyz") || envUrl.includes("vercel.app")) {
-      return OFFICIAL_DOMAIN;
+    if (envUrl.includes("nurshopbd.xyz")) {
+      return DEFAULT_PRODUCTION_DOMAIN;
     }
     const withProto = envUrl.startsWith("http://") || envUrl.startsWith("https://") ? envUrl : `https://${envUrl}`;
     return withProto.replace(/\/$/, "");
   }
-  return OFFICIAL_DOMAIN;
+  return DEFAULT_PRODUCTION_DOMAIN;
 }
 
-export function toAbsoluteUrl(pathOrUrl?: string, fallback: string = HOMEPAGE_OG_BANNER): string {
-  const siteUrl = getSiteUrl();
+export async function getSiteUrl(): Promise<string> {
+  try {
+    const h = await headers();
+    const host = h.get("x-forwarded-host") || h.get("host");
+    if (host) {
+      if (host.includes("localhost") || host.includes("127.0.0.1")) {
+        return `http://${host}`;
+      }
+      if (host.includes("nurshopbd.vercel.app")) {
+        return "https://nurshopbd.vercel.app";
+      }
+      if (host.includes("nurshopbd.net")) {
+        return "https://nurshopbd.net";
+      }
+      const proto = h.get("x-forwarded-proto") || "https";
+      return `${proto}://${host}`;
+    }
+  } catch {
+    // Outside request context / build time
+  }
+  return getDefaultSiteUrl();
+}
+
+export function toAbsoluteUrl(
+  pathOrUrl?: string,
+  baseUrl: string = DEFAULT_PRODUCTION_DOMAIN
+): string {
+  const cleanBase = baseUrl.replace(/\/$/, "");
   if (!pathOrUrl || typeof pathOrUrl !== "string") {
-    return fallback;
+    return `${cleanBase}/nurshopbd-banner.png`;
   }
   const trimmed = pathOrUrl.trim();
   if (!trimmed) {
-    return fallback;
+    return `${cleanBase}/nurshopbd-banner.png`;
   }
   if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
     if (trimmed.includes("nurshopbd.xyz")) {
-      return trimmed.replace("nurshopbd.xyz", "nurshopbd.net");
+      return trimmed.replace("nurshopbd.xyz", cleanBase.replace(/^https?:\/\//, ""));
     }
     return trimmed;
   }
   const normalizedPath = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
-  return `${siteUrl}${normalizedPath}`;
+  return `${cleanBase}${normalizedPath}`;
 }
 
 export function buildPageMetadata({
@@ -42,6 +70,7 @@ export function buildPageMetadata({
   path = "/",
   image,
   keywords,
+  baseUrl = DEFAULT_PRODUCTION_DOMAIN,
 }: {
   site: ISiteSettings;
   title: string;
@@ -49,11 +78,11 @@ export function buildPageMetadata({
   path?: string;
   image?: string;
   keywords?: string[];
+  baseUrl?: string;
 }): Metadata {
-  const url = getSiteUrl();
-  const canonical = `${url}${path === "/" ? "" : path}`;
+  const canonical = `${baseUrl}${path === "/" ? "" : path}`;
   const desc = description || site.seo?.defaultDescription || site.description;
-  const ogImage = image?.trim() ? toAbsoluteUrl(image) : HOMEPAGE_OG_BANNER;
+  const ogImage = image?.trim() ? toAbsoluteUrl(image, baseUrl) : `${baseUrl}/nurshopbd-banner.png`;
   const brand = site.brandName || "NUR SHOP BD";
 
   return {
@@ -89,6 +118,7 @@ export function buildPageMetadata({
 export function buildProductMetadata({
   site,
   product,
+  baseUrl = DEFAULT_PRODUCTION_DOMAIN,
 }: {
   site: ISiteSettings;
   product: {
@@ -100,9 +130,9 @@ export function buildProductMetadata({
     sku?: string;
     brand?: string;
   };
+  baseUrl?: string;
 }): Metadata {
-  const url = getSiteUrl();
-  const canonical = `${url}/products/${product.slug}`;
+  const canonical = `${baseUrl}/products/${product.slug}`;
   const brand = site.brandName || "NUR SHOP BD";
   const title = `${product.name} | ${brand}`;
   
@@ -118,8 +148,8 @@ export function buildProductMetadata({
 
   // Use product's exact featured image if available
   const ogImage = product.image?.trim()
-    ? toAbsoluteUrl(product.image, HOMEPAGE_OG_BANNER)
-    : HOMEPAGE_OG_BANNER;
+    ? toAbsoluteUrl(product.image, baseUrl)
+    : `${baseUrl}/nurshopbd-banner.png`;
 
   return {
     title,

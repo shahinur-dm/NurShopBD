@@ -4,18 +4,19 @@ import { CatalogShell } from "@/components/CatalogShell";
 import { RelatedSearch } from "@/components/RelatedSearch";
 import { Img } from "@/components/Img";
 import { getCategories, getSettings, getUseCases } from "@/lib/data";
-import { buildPageMetadata } from "@/lib/seo";
+import { buildPageMetadata, getSiteUrl } from "@/lib/seo";
 
 export const revalidate = 60;
 
 export async function generateMetadata(): Promise<Metadata> {
-  const site = await getSettings();
+  const [site, baseUrl] = await Promise.all([getSettings(), getSiteUrl()]);
   return buildPageMetadata({
     site,
     title: "Use cases",
     description:
       "How NUR SHOP BD is used: spare-part matching, conveyor control, VFD retrofits, panel kits, textile utilities and EEE lab benches.",
     path: "/use-cases",
+    baseUrl,
     keywords: [
       "industrial use cases Bangladesh",
       "PLC conveyor automation",

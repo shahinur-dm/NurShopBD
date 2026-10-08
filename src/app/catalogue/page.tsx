@@ -5,17 +5,18 @@ import { RelatedSearch } from "@/components/RelatedSearch";
 import { connectDB } from "@/lib/db";
 import { DownloadFile } from "@/lib/models";
 import { getCategories, getSettings } from "@/lib/data";
-import { buildPageMetadata } from "@/lib/seo";
+import { buildPageMetadata, getSiteUrl } from "@/lib/seo";
 
 export const revalidate = 60;
 
 export async function generateMetadata(): Promise<Metadata> {
-  const site = await getSettings();
+  const [site, baseUrl] = await Promise.all([getSettings(), getSiteUrl()]);
   return buildPageMetadata({
     site,
     title: "Catalogue",
     description: "Download product catalogues from NUR SHOP BD.",
     path: "/catalogue",
+    baseUrl,
   });
 }
 

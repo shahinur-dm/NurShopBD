@@ -2,8 +2,7 @@ import { getSettings } from "@/lib/data";
 import { getSiteUrl, HOMEPAGE_OG_BANNER } from "@/lib/seo";
 
 export async function JsonLd() {
-  const site = await getSettings();
-  const url = getSiteUrl();
+  const [site, url] = await Promise.all([getSettings(), getSiteUrl()]);
   const brand = site.brandName || "NUR SHOP BD";
 
   const organization = {

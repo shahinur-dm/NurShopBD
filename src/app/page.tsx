@@ -18,12 +18,11 @@ import { getSiteUrl, HOMEPAGE_OG_BANNER } from "@/lib/seo";
 export const revalidate = 60;
 
 export async function generateMetadata(): Promise<Metadata> {
-  const site = await getSettings();
-  const url = getSiteUrl();
+  const [site, url] = await Promise.all([getSettings(), getSiteUrl()]);
   const title = "NUR SHOP BD - Industrial Machinery, PLC Automation & Spare Parts";
   const description =
     "Buy machine spare parts, industrial automation equipment, PLC conversion, servo systems, and technical support services in Bangladesh from NUR SHOP BD.";
-  const ogImage = HOMEPAGE_OG_BANNER;
+  const ogImage = `${url}/nurshopbd-banner.png`;
   const brand = site.brandName || "NUR SHOP BD";
 
   return {

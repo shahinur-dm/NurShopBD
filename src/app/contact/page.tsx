@@ -9,17 +9,18 @@ import {
   getServiceBySlug,
   getSettings,
 } from "@/lib/data";
-import { buildPageMetadata } from "@/lib/seo";
+import { buildPageMetadata, getSiteUrl } from "@/lib/seo";
 
 export const revalidate = 60;
 
 export async function generateMetadata(): Promise<Metadata> {
-  const site = await getSettings();
+  const [site, baseUrl] = await Promise.all([getSettings(), getSiteUrl()]);
   return buildPageMetadata({
     site,
     title: "Contact",
     description: site.contactPage?.description || "Request a quote for machine parts or technical service.",
     path: "/contact",
+    baseUrl,
   });
 }
 
