@@ -1,5 +1,5 @@
 import { getSettings } from "@/lib/data";
-import { getSiteUrl } from "@/lib/seo";
+import { getSiteUrl, HOMEPAGE_OG_BANNER } from "@/lib/seo";
 
 export async function JsonLd() {
   const site = await getSettings();
@@ -16,7 +16,7 @@ export async function JsonLd() {
       ? site.logoUrl.startsWith("http")
         ? site.logoUrl
         : `${url}${site.logoUrl.startsWith("/") ? site.logoUrl : `/${site.logoUrl}`}`
-      : `${url}/opengraph-image`,
+      : HOMEPAGE_OG_BANNER,
     email: site.email || "ceo@nurengineering.bd.com",
     telephone: site.phone || "+8801805030940",
     description:

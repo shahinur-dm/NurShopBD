@@ -13,7 +13,7 @@ import {
   getFeatures,
   getSettings,
 } from "@/lib/data";
-import { getSiteUrl, toAbsoluteUrl } from "@/lib/seo";
+import { getSiteUrl, HOMEPAGE_OG_BANNER } from "@/lib/seo";
 
 export const revalidate = 60;
 
@@ -23,7 +23,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const title = "NUR SHOP BD - Industrial Machinery, PLC Automation & Spare Parts";
   const description =
     "Buy machine spare parts, industrial automation equipment, PLC conversion, servo systems, and technical support services in Bangladesh from NUR SHOP BD.";
-  const ogImage = site.logoUrl ? toAbsoluteUrl(site.logoUrl) : `${url}/opengraph-image`;
+  const ogImage = HOMEPAGE_OG_BANNER;
   const brand = site.brandName || "NUR SHOP BD";
 
   return {

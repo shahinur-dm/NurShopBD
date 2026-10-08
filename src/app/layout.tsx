@@ -8,7 +8,7 @@ import { Footer } from "@/components/Footer";
 import { SiteProvider } from "@/components/SiteProvider";
 import { JsonLd } from "@/components/JsonLd";
 import { Analytics } from "@/components/Analytics";
-import { getAnalyticsIds, getSiteUrl } from "@/lib/seo";
+import { getAnalyticsIds, getSiteUrl, HOMEPAGE_OG_BANNER } from "@/lib/seo";
 import { getSettings, getUseCases } from "@/lib/data";
 
 const body = IBM_Plex_Sans({
@@ -43,11 +43,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const defaultDescription =
     site.seo?.defaultDescription ||
     "Buy machine spare parts, industrial automation equipment, PLC conversion, servo systems, and technical support services in Bangladesh from NUR SHOP BD.";
-  const ogImage = site.logoUrl
-    ? site.logoUrl.startsWith("http")
-      ? site.logoUrl
-      : `${url}${site.logoUrl.startsWith("/") ? site.logoUrl : `/${site.logoUrl}`}`
-    : `${url}/opengraph-image`;
+  const ogImage = HOMEPAGE_OG_BANNER;
 
   return {
     metadataBase: new URL(url),

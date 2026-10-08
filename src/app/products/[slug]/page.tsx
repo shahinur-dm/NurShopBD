@@ -15,7 +15,7 @@ import {
   getRelatedProducts,
   getSettings,
 } from "@/lib/data";
-import { buildProductMetadata, getSiteUrl, toAbsoluteUrl } from "@/lib/seo";
+import { buildProductMetadata, getSiteUrl, toAbsoluteUrl, HOMEPAGE_OG_BANNER } from "@/lib/seo";
 
 export const revalidate = 60;
 
@@ -70,7 +70,7 @@ export default async function ProductDetailPage({
   const siteUrl = getSiteUrl();
   const productAbsoluteImage = product.image
     ? toAbsoluteUrl(product.image)
-    : `${siteUrl}/opengraph-image`;
+    : HOMEPAGE_OG_BANNER;
 
   const productJsonLd = {
     "@context": "https://schema.org",

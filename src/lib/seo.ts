@@ -1,27 +1,30 @@
 import type { Metadata } from "next";
 import type { ISiteSettings } from "@/lib/models";
 
+export const OFFICIAL_DOMAIN = "https://nurshopbd.net";
+export const HOMEPAGE_OG_BANNER = `${OFFICIAL_DOMAIN}/nurshopbd-banner.png`;
+
 export function getSiteUrl(): string {
   const envUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
   if (envUrl) {
-    if (envUrl.includes("nurshopbd.xyz")) {
-      return "https://nurshopbd.net";
+    if (envUrl.includes("nurshopbd.xyz") || envUrl.includes("vercel.app")) {
+      return OFFICIAL_DOMAIN;
     }
     const withProto = envUrl.startsWith("http://") || envUrl.startsWith("https://") ? envUrl : `https://${envUrl}`;
     return withProto.replace(/\/$/, "");
   }
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL.replace(/\/$/, "")}`;
-  }
-  return "https://nurshopbd.net";
+  return OFFICIAL_DOMAIN;
 }
 
-export function toAbsoluteUrl(pathOrUrl?: string): string {
+export function toAbsoluteUrl(pathOrUrl?: string, fallback: string = HOMEPAGE_OG_BANNER): string {
   const siteUrl = getSiteUrl();
   if (!pathOrUrl || typeof pathOrUrl !== "string") {
-    return `${siteUrl}/opengraph-image`;
+    return fallback;
   }
   const trimmed = pathOrUrl.trim();
+  if (!trimmed) {
+    return fallback;
+  }
   if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
     if (trimmed.includes("nurshopbd.xyz")) {
       return trimmed.replace("nurshopbd.xyz", "nurshopbd.net");
@@ -50,7 +53,7 @@ export function buildPageMetadata({
   const url = getSiteUrl();
   const canonical = `${url}${path === "/" ? "" : path}`;
   const desc = description || site.seo?.defaultDescription || site.description;
-  const ogImage = toAbsoluteUrl(image);
+  const ogImage = image?.trim() ? toAbsoluteUrl(image) : HOMEPAGE_OG_BANNER;
   const brand = site.brandName || "NUR SHOP BD";
 
   return {
@@ -65,7 +68,14 @@ export function buildPageMetadata({
       siteName: brand,
       title: `${title} | ${brand}`,
       description: desc,
-      images: [{ url: ogImage, width: 1200, height: 630, alt: title }],
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
@@ -106,7 +116,10 @@ export function buildProductMetadata({
     .trim()
     .slice(0, 200);
 
-  const ogImage = toAbsoluteUrl(product.image);
+  // Use product's exact featured image if available
+  const ogImage = product.image?.trim()
+    ? toAbsoluteUrl(product.image, HOMEPAGE_OG_BANNER)
+    : HOMEPAGE_OG_BANNER;
 
   return {
     title,
@@ -119,7 +132,7 @@ export function buildProductMetadata({
       locale: "en_BD",
       url: canonical,
       siteName: brand,
-      title,
+      title: `${product.name} | ${brand}`,
       description: cleanDesc,
       images: [
         {
@@ -132,7 +145,7 @@ export function buildProductMetadata({
     },
     twitter: {
       card: "summary_large_image",
-      title,
+      title: `${product.name} | ${brand}`,
       description: cleanDesc,
       images: [ogImage],
     },
