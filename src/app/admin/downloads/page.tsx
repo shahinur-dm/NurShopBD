@@ -24,6 +24,7 @@ export default function AdminDownloadsPage() {
   const [order, setOrder] = useState(0);
   const [file, setFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -49,6 +50,7 @@ export default function AdminDownloadsPage() {
     setOrder(items.length + 1);
     setFile(null);
     setError("");
+    setUploadProgress(0);
     setModalOpen(true);
   }
 
@@ -58,35 +60,138 @@ export default function AdminDownloadsPage() {
     setOrder(item.order || 0);
     setFile(null);
     setError("");
+    setUploadProgress(0);
     setModalOpen(true);
+  }
+
+  async function uploadFileInChunks(params: {
+    file: File;
+    title: string;
+    kind: Kind;
+    order: number;
+    editingId?: string;
+    onProgress: (percent: number) => void;
+  }) {
+    const CHUNK_SIZE = 2 * 1024 * 1024; // 2MB chunks safely below Vercel's 4.5MB payload limit
+    const totalSize = params.file.size;
+    const totalChunks = Math.ceil(totalSize / CHUNK_SIZE);
+
+    // 1. Initialize chunked session
+    const initRes = await fetch("/api/admin/downloads/chunk?action=init", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: params.title,
+        kind: params.kind,
+        filename: params.file.name,
+        mimeType: params.file.type || "application/pdf",
+        totalSize,
+        totalChunks,
+        order: params.order,
+        editingId: params.editingId,
+      }),
+    });
+    const initData = await initRes.json();
+    if (!initRes.ok) throw new Error(initData.error || "Failed to initialize upload");
+    const { uploadId } = initData;
+
+    // 2. Upload each chunk sequentially
+    for (let i = 0; i < totalChunks; i++) {
+      const start = i * CHUNK_SIZE;
+      const end = Math.min(start + CHUNK_SIZE, totalSize);
+      const chunkBlob = params.file.slice(start, end);
+
+      const chunkFormData = new FormData();
+      chunkFormData.append("uploadId", uploadId);
+      chunkFormData.append("chunkIndex", String(i));
+      chunkFormData.append("chunk", chunkBlob, params.file.name);
+
+      let success = false;
+      let lastErr = "";
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const chunkRes = await fetch("/api/admin/downloads/chunk?action=chunk", {
+            method: "POST",
+            body: chunkFormData,
+          });
+          const chunkData = await chunkRes.json();
+          if (!chunkRes.ok) throw new Error(chunkData.error || "Chunk upload failed");
+          success = true;
+          break;
+        } catch (err) {
+          lastErr = err instanceof Error ? err.message : "Network error";
+          await new Promise((r) => setTimeout(r, 600));
+        }
+      }
+      if (!success) {
+        throw new Error(`Failed uploading chunk ${i + 1}/${totalChunks}: ${lastErr}`);
+      }
+
+      const percent = Math.round(((i + 1) / totalChunks) * 100);
+      params.onProgress(percent);
+    }
+
+    // 3. Finalize and assemble in MongoDB GridFS
+    const compRes = await fetch("/api/admin/downloads/chunk?action=complete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ uploadId }),
+    });
+    const compData = await compRes.json();
+    if (!compRes.ok) throw new Error(compData.error || "Failed to finalize upload");
+
+    return compData.item;
   }
 
   async function handleSave(e: FormEvent) {
     e.preventDefault();
     setSaving(true);
     setError("");
+    setUploadProgress(0);
     try {
       if (!editing && !file) {
         setError("Please choose a PDF file.");
         setSaving(false);
         return;
       }
-      const formData = new FormData();
-      formData.set("title", title);
-      formData.set("kind", kind);
-      formData.set("order", String(order));
-      if (file) formData.set("file", file);
 
-      const url = editing ? `/api/admin/downloads/${editing._id}` : "/api/admin/downloads";
-      const res = await fetch(url, { method: editing ? "PUT" : "POST", body: formData });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to save");
+      if (file && file.size > 50 * 1024 * 1024) {
+        setError("File size exceeds 50MB upload limit. Please choose a smaller PDF.");
+        setSaving(false);
+        return;
+      }
+
+      if (file && file.size > 3 * 1024 * 1024) {
+        // Use chunked upload for files > 3MB (supports 10MB, 25MB, up to 50MB on Vercel without 413 error)
+        await uploadFileInChunks({
+          file,
+          title,
+          kind,
+          order,
+          editingId: editing?._id,
+          onProgress: (p) => setUploadProgress(p),
+        });
+      } else {
+        // Direct upload for smaller files or metadata edits
+        const formData = new FormData();
+        formData.set("title", title);
+        formData.set("kind", kind);
+        formData.set("order", String(order));
+        if (file) formData.set("file", file);
+
+        const url = editing ? `/api/admin/downloads/${editing._id}` : "/api/admin/downloads";
+        const res = await fetch(url, { method: editing ? "PUT" : "POST", body: formData });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to save");
+      }
+
       setModalOpen(false);
       loadItems(kind);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setSaving(false);
+      setUploadProgress(0);
     }
   }
 
@@ -225,7 +330,11 @@ export default function AdminDownloadsPage() {
                 Cancel
               </button>
               <button type="submit" disabled={saving} className="btn-orange px-4 py-2 text-xs font-bold uppercase">
-                {saving ? "Saving..." : "Save"}
+                {saving
+                  ? uploadProgress > 0 && uploadProgress < 100
+                    ? `Uploading ${uploadProgress}%...`
+                    : "Saving..."
+                  : "Save"}
               </button>
             </div>
           </form>

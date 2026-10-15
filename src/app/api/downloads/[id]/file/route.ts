@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { DownloadFile, type IDownloadFile } from "@/lib/models";
-import { readDownloadBuffer } from "@/lib/download-storage";
+import { getDownloadStream } from "@/lib/download-storage";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -23,21 +23,22 @@ export async function GET(
     return NextResponse.json({ error: "File not found" }, { status: 404 });
   }
 
-  const stored = await readDownloadBuffer(item.gridFsId);
-  if (!stored) {
+  const streamInfo = await getDownloadStream(item.gridFsId);
+  if (!streamInfo) {
     return NextResponse.json({ error: "File is missing" }, { status: 404 });
   }
 
-  const filename = (item.filename || stored.filename || "document.pdf").replace(/"/g, "");
+  const rawFilename = (item.filename || streamInfo.filename || "document.pdf").replace(/"/g, "");
   const disposition = view ? "inline" : "attachment";
+  const contentLength = String(item.size || streamInfo.length);
 
-  return new NextResponse(new Uint8Array(stored.buffer), {
+  return new Response(streamInfo.stream, {
     status: 200,
     headers: {
-      "Content-Type": item.mimeType || stored.mimeType || "application/pdf",
-      "Content-Length": String(stored.buffer.length),
-      "Content-Disposition": `${disposition}; filename="${filename}"`,
-      "Cache-Control": "private, max-age=3600",
+      "Content-Type": item.mimeType || streamInfo.mimeType || "application/pdf",
+      "Content-Length": contentLength,
+      "Content-Disposition": `${disposition}; filename="${encodeURIComponent(rawFilename)}"`,
+      "Cache-Control": "public, max-age=3600",
     },
   });
 }

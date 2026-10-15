@@ -5,13 +5,15 @@ import { getCurrentAdminUser, logActivity } from "@/lib/auth";
 import {
   deleteDownloadBuffer,
   isAllowedDownloadFile,
+  isPdfMagicBytes,
   storeDownloadBuffer,
+  MAX_DOWNLOAD_FILE_BYTES,
 } from "@/lib/download-storage";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-const MAX_BYTES = 4 * 1024 * 1024;
+const MAX_BYTES = MAX_DOWNLOAD_FILE_BYTES;
 
 function serialize(doc: {
   _id: unknown;
@@ -70,11 +72,17 @@ export async function PUT(
       }
       if (file.size > MAX_BYTES) {
         return NextResponse.json(
-          { error: "File size exceeds 4MB upload limit. Please upload a smaller PDF." },
+          { error: `File size exceeds ${(MAX_BYTES / (1024 * 1024)).toFixed(0)}MB upload limit. Please upload a smaller PDF.` },
           { status: 400 }
         );
       }
       const buffer = Buffer.from(await file.arrayBuffer());
+      if (!isPdfMagicBytes(buffer)) {
+        return NextResponse.json(
+          { error: "Invalid file content: The file is not a valid PDF document (%PDF- missing)." },
+          { status: 400 }
+        );
+      }
       const stored = await storeDownloadBuffer({
         filename: file.name,
         mimeType: file.type || "application/pdf",
