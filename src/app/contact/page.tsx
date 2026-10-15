@@ -9,18 +9,25 @@ import {
   getServiceBySlug,
   getSettings,
 } from "@/lib/data";
-import { buildPageMetadata, getSiteUrl } from "@/lib/seo";
+import { buildPageMetadata, DEFAULT_PRODUCTION_DOMAIN } from "@/lib/seo";
 
 export const revalidate = 60;
 
 export async function generateMetadata(): Promise<Metadata> {
-  const [site, baseUrl] = await Promise.all([getSettings(), getSiteUrl()]);
+  const site = await getSettings();
   return buildPageMetadata({
     site,
-    title: "Contact",
-    description: site.contactPage?.description || "Request a quote for machine parts or technical service.",
+    title: "Contact Us — Request Quotation & Technical Support",
+    description:
+      site.contactPage?.description ||
+      "Contact NurShopBD in Mirpur-1, Dhaka, Bangladesh for machinery spare parts quotations, PLC automation support, WhatsApp consultation, and inquiries.",
     path: "/contact",
-    baseUrl,
+    keywords: [
+      "Contact NurShopBD",
+      "NurShopBD phone number",
+      "NurShopBD Dhaka address",
+      "machine parts quotation Bangladesh",
+    ],
   });
 }
 
@@ -37,6 +44,25 @@ export default async function ContactPage({
     sp.service ? getServiceBySlug(sp.service) : Promise.resolve(null),
   ]);
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: DEFAULT_PRODUCTION_DOMAIN,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Contact",
+        item: `${DEFAULT_PRODUCTION_DOMAIN}/contact`,
+      },
+    ],
+  };
+
   const subject = product
     ? `Quote: ${product.name}`
     : service
@@ -52,10 +78,15 @@ export default async function ContactPage({
   const emailLabel = cp?.emailLabel || "Email";
   const addressLabel = cp?.addressLabel || "Address";
   const hoursLabel = cp?.hoursLabel || "Hours";
-  const companyName = settings.companyName || settings.brandName || "NUR SHOP BD";
+  const companyName = settings.companyName || settings.brandName || "NurShopBD";
 
   return (
     <CatalogShell categories={categories} showSearch={false}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+
       <div className="section-label">Contact</div>
       <div className="grid gap-4 lg:grid-cols-[0.95fr_1.05fr] lg:items-stretch">
         <div className="flex h-full flex-col border border-line bg-navy p-3.5 text-white sm:p-5">

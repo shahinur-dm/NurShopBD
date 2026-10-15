@@ -11,7 +11,7 @@ import {
   getSettings,
 } from "@/lib/data";
 import type { PopulatedProduct } from "@/lib/data";
-import { buildPageMetadata, getSiteUrl } from "@/lib/seo";
+import { buildPageMetadata, DEFAULT_PRODUCTION_DOMAIN } from "@/lib/seo";
 
 export const revalidate = 60;
 
@@ -21,19 +21,24 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const [service, site, baseUrl] = await Promise.all([
+  const [service, site] = await Promise.all([
     getServiceBySlug(slug),
     getSettings(),
-    getSiteUrl(),
   ]);
   if (!service) return { title: "Technical services" };
   return buildPageMetadata({
     site,
-    title: service.title,
-    description: service.shortDescription,
-    path: `/services/${slug}`,
+    title: `${service.title} - Technical Engineering Service in Bangladesh`,
+    description: service.shortDescription || service.description,
+    path: `/services/${encodeURIComponent(slug)}`,
     image: service.image,
-    baseUrl,
+    keywords: [
+      service.title,
+      `${service.title} Bangladesh`,
+      "industrial automation service",
+      "machine maintenance Bangladesh",
+      "NurShopBD",
+    ],
   });
 }
 
@@ -48,8 +53,59 @@ export default async function ServiceDetailPage({
   const categories = await getCategories("product");
   const related = (service.relatedProducts || []) as unknown as PopulatedProduct[];
 
+  const serviceJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    name: service.title,
+    description: service.shortDescription || service.description,
+    provider: {
+      "@type": "Organization",
+      name: "NurShopBD",
+      url: DEFAULT_PRODUCTION_DOMAIN,
+    },
+    areaServed: {
+      "@type": "Country",
+      name: "Bangladesh",
+    },
+    url: `${DEFAULT_PRODUCTION_DOMAIN}/services/${service.slug}`,
+  };
+
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: DEFAULT_PRODUCTION_DOMAIN,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Services",
+        item: `${DEFAULT_PRODUCTION_DOMAIN}/services`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: service.title,
+        item: `${DEFAULT_PRODUCTION_DOMAIN}/services/${service.slug}`,
+      },
+    ],
+  };
+
   return (
     <CatalogShell categories={categories}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+
       <article className="overflow-hidden border border-line bg-white">
         {service.image && (
           <div className="relative h-56 md:h-72">

@@ -15,7 +15,7 @@ import {
   getRelatedProducts,
   getSettings,
 } from "@/lib/data";
-import { buildProductMetadata, getSiteUrl, toAbsoluteUrl, HOMEPAGE_OG_BANNER } from "@/lib/seo";
+import { buildProductMetadata, DEFAULT_PRODUCTION_DOMAIN, toAbsoluteUrl, HOMEPAGE_OG_BANNER } from "@/lib/seo";
 
 export const revalidate = 60;
 
@@ -25,13 +25,14 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const [product, site, baseUrl] = await Promise.all([
+  const [product, site] = await Promise.all([
     getProductBySlug(slug),
     getSettings(),
-    getSiteUrl(),
   ]);
   if (!product) return { title: "Product Not Found" };
-  return buildProductMetadata({ site, product, baseUrl });
+  const categoryName =
+    typeof product.category === "object" ? product.category.name : undefined;
+  return buildProductMetadata({ site, product, categoryName });
 }
 
 export default async function ProductDetailPage({
@@ -53,11 +54,10 @@ export default async function ProductDetailPage({
   const categoryName =
     typeof product.category === "object" ? product.category.name : "Category";
 
-  const [categories, related, siteSettings, siteUrl] = await Promise.all([
+  const [categories, related, siteSettings] = await Promise.all([
     getCategories("product"),
     getRelatedProducts(categoryId, product.slug, 15),
     getSettings(),
-    getSiteUrl(),
   ]);
 
   const phone = siteSettings?.social?.whatsapp || siteSettings?.phone || "+8801713798987";
@@ -70,8 +70,10 @@ export default async function ProductDetailPage({
     Number(product.price) > 0;
 
   const productAbsoluteImage = product.image
-    ? toAbsoluteUrl(product.image, siteUrl)
-    : `${siteUrl}/nurshopbd-banner.png`;
+    ? toAbsoluteUrl(product.image, DEFAULT_PRODUCTION_DOMAIN)
+    : `${DEFAULT_PRODUCTION_DOMAIN}/nurshopbd-banner.png`;
+
+  const brandName = siteSettings.brandName || "NurShopBD";
 
   const productJsonLd = {
     "@context": "https://schema.org",
@@ -80,7 +82,7 @@ export default async function ProductDetailPage({
     description:
       product.shortDescription ||
       product.description ||
-      `${product.name} available at ${siteSettings.brandName || "NUR SHOP BD"}`,
+      `${product.name} available at ${brandName}`,
     ...(productAbsoluteImage ? { image: [productAbsoluteImage] } : {}),
     ...(product.sku ? { sku: product.sku } : {}),
     ...(product.brand
@@ -94,24 +96,70 @@ export default async function ProductDetailPage({
     ...(categoryName && categoryName !== "Category" && categoryName !== "—"
       ? { category: categoryName }
       : {}),
-    url: `${siteUrl}/products/${product.slug}`,
-    offers: {
-      "@type": "Offer",
-      url: `${siteUrl}/products/${product.slug}`,
-      priceCurrency: product.currency || "BDT",
-      price: hasPrice ? String(product.price) : "0",
-      priceValidUntil: "2030-12-31",
-      availability:
-        product.inStock !== false
-          ? "https://schema.org/InStock"
-          : "https://schema.org/PreOrder",
-      itemCondition: "https://schema.org/NewCondition",
-      seller: {
-        "@type": "Organization",
-        name: siteSettings.brandName || "NUR SHOP BD",
-        url: siteUrl,
+    url: `${DEFAULT_PRODUCTION_DOMAIN}/products/${product.slug}`,
+    ...(hasPrice
+      ? {
+          offers: {
+            "@type": "Offer",
+            url: `${DEFAULT_PRODUCTION_DOMAIN}/products/${product.slug}`,
+            priceCurrency: product.currency || "BDT",
+            price: String(product.price),
+            priceValidUntil: "2030-12-31",
+            availability:
+              product.inStock !== false
+                ? "https://schema.org/InStock"
+                : "https://schema.org/PreOrder",
+            itemCondition: "https://schema.org/NewCondition",
+            seller: {
+              "@type": "Organization",
+              name: brandName,
+              url: DEFAULT_PRODUCTION_DOMAIN,
+            },
+          },
+        }
+      : {}),
+  };
+
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: DEFAULT_PRODUCTION_DOMAIN,
       },
-    },
+      ...(categorySlug
+        ? [
+            {
+              "@type": "ListItem",
+              position: 2,
+              name: categoryName,
+              item: `${DEFAULT_PRODUCTION_DOMAIN}/products?category=${categorySlug}`,
+            },
+            {
+              "@type": "ListItem",
+              position: 3,
+              name: product.name,
+              item: `${DEFAULT_PRODUCTION_DOMAIN}/products/${product.slug}`,
+            },
+          ]
+        : [
+            {
+              "@type": "ListItem",
+              position: 2,
+              name: "Products",
+              item: `${DEFAULT_PRODUCTION_DOMAIN}/products`,
+            },
+            {
+              "@type": "ListItem",
+              position: 3,
+              name: product.name,
+              item: `${DEFAULT_PRODUCTION_DOMAIN}/products/${product.slug}`,
+            },
+          ]),
+    ],
   };
 
   const media = getProductMedia(
@@ -144,6 +192,12 @@ export default async function ProductDetailPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
       />
+      {/* BreadcrumbList Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+
 
       {/* Breadcrumb Navigation */}
       <nav className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs text-slate-500 mb-2">

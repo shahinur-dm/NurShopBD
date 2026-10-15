@@ -4,19 +4,18 @@ import { CatalogShell } from "@/components/CatalogShell";
 import { RelatedSearch } from "@/components/RelatedSearch";
 import { Img } from "@/components/Img";
 import { getCategories, getSettings, getUseCases } from "@/lib/data";
-import { buildPageMetadata, getSiteUrl } from "@/lib/seo";
+import { buildPageMetadata, DEFAULT_PRODUCTION_DOMAIN } from "@/lib/seo";
 
 export const revalidate = 60;
 
 export async function generateMetadata(): Promise<Metadata> {
-  const [site, baseUrl] = await Promise.all([getSettings(), getSiteUrl()]);
+  const site = await getSettings();
   return buildPageMetadata({
     site,
-    title: "Use cases",
+    title: "Industrial Applications & Engineering Case Studies",
     description:
-      "How NUR SHOP BD is used: spare-part matching, conveyor control, VFD retrofits, panel kits, textile utilities and EEE lab benches.",
+      "Explore industrial automation applications and engineering solutions in Bangladesh: spare parts matching, conveyor control, VFD retrofits, and panel kits from NurShopBD.",
     path: "/use-cases",
-    baseUrl,
     keywords: [
       "industrial use cases Bangladesh",
       "PLC conveyor automation",
@@ -24,6 +23,7 @@ export async function generateMetadata(): Promise<Metadata> {
       "control panel kit",
       "textile RMG drives",
       "EEE lab bench",
+      "NurShopBD",
     ],
   });
 }
@@ -34,9 +34,33 @@ export default async function UseCasesPage() {
     getUseCases(),
   ]);
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: DEFAULT_PRODUCTION_DOMAIN,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Our Services",
+        item: `${DEFAULT_PRODUCTION_DOMAIN}/use-cases`,
+      },
+    ],
+  };
+
   return (
     <CatalogShell categories={categories} showSearch={false}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       <header className="relative overflow-hidden bg-navy p-7 text-white md:p-9">
+
         <div className="absolute right-0 top-0 h-36 w-36 bg-orange/20 blur-3xl" />
         <p className="kicker text-orange-bright">Company use cases</p>
         <h1 className="mt-4 font-display text-[clamp(1.8rem,3.5vw,2.6rem)] font-bold uppercase leading-[0.95] tracking-[0.04em]">

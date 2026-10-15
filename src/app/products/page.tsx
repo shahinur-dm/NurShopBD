@@ -4,7 +4,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { SubCategoryBar } from "@/components/SubCategoryBar";
 import { RelatedSearch } from "@/components/RelatedSearch";
 import { getCategories, getSubCategories, getProducts, getSettings } from "@/lib/data";
-import { buildPageMetadata, getSiteUrl } from "@/lib/seo";
+import { buildPageMetadata, DEFAULT_PRODUCTION_DOMAIN } from "@/lib/seo";
 
 export const revalidate = 60;
 
@@ -14,20 +14,74 @@ export async function generateMetadata({
   searchParams: Promise<{ category?: string; subcategory?: string; q?: string }>;
 }): Promise<Metadata> {
   const sp = await searchParams;
-  const [site, baseUrl] = await Promise.all([getSettings(), getSiteUrl()]);
-  const title = sp.q
-    ? `Search: ${sp.q}`
-    : sp.subcategory
-      ? sp.subcategory.replace(/-/g, " ")
-      : sp.category
-        ? sp.category.replace(/-/g, " ")
-        : "Products";
+  const [site, categories] = await Promise.all([
+    getSettings(),
+    getCategories("product"),
+  ]);
+
+  if (sp.q) {
+    return buildPageMetadata({
+      site,
+      title: `Search: "${sp.q}"`,
+      description: `Search results for "${sp.q}" in industrial machine parts and automation catalog at ${site.brandName || "NurShopBD"}.`,
+      path: "/products",
+      robots: { index: false, follow: true },
+    });
+  }
+
+  const activeCategory = sp.category
+    ? categories.find((c) => c.slug === sp.category)
+    : undefined;
+
+  let subName = "";
+  if (sp.category && sp.subcategory) {
+    const subcategories = await getSubCategories(sp.category);
+    const activeSub = subcategories.find((s) => s.slug === sp.subcategory);
+    if (activeSub) subName = activeSub.name;
+  }
+
+  if (activeCategory) {
+    const catTitle = subName
+      ? `${subName} - ${activeCategory.name} in Bangladesh`
+      : `${activeCategory.name} in Bangladesh`;
+    const catDesc =
+      activeCategory.description ||
+      `Buy genuine ${activeCategory.name} at ${site.brandName || "NurShopBD"} in Bangladesh. Check specifications, technical details, and request price quotes with fast delivery.`;
+    const catPath = `/products?category=${encodeURIComponent(activeCategory.slug)}${
+      sp.subcategory ? `&subcategory=${encodeURIComponent(sp.subcategory)}` : ""
+    }`;
+
+    return buildPageMetadata({
+      site,
+      title: catTitle,
+      description: catDesc,
+      path: catPath,
+      keywords: [
+        activeCategory.name,
+        ...(subName ? [subName] : []),
+        `${activeCategory.name} Bangladesh`,
+        `${activeCategory.name} price in Bangladesh`,
+        "NurShopBD",
+        "industrial machinery spare parts",
+      ],
+    });
+  }
+
   return buildPageMetadata({
     site,
-    title,
-    description: "Industrial machine parts catalog — PLC, motors, VFD, sensors and spares.",
+    title: "Industrial Machinery, Automation Equipment & Machine Spare Parts",
+    description:
+      "Browse industrial machinery, PLC & HMI automation, servo systems, VFD inverters, hydraulic pumps, and spare parts at NurShopBD in Bangladesh.",
     path: "/products",
-    baseUrl,
+    keywords: [
+      "Industrial Machinery Bangladesh",
+      "Machine Spare Parts Bangladesh",
+      "PLC Automation Equipment",
+      "Servo Motors and Drives",
+      "Hydraulic Pumps",
+      "VFD Inverters",
+      "NurShopBD",
+    ],
   });
 }
 
@@ -37,7 +91,7 @@ export default async function ProductsPage({
   searchParams: Promise<{ category?: string; subcategory?: string; q?: string }>;
 }) {
   const sp = await searchParams;
-  const [categories, subcategories, products] = await Promise.all([
+  const [categories, subcategories, products, siteSettings] = await Promise.all([
     getCategories("product"),
     sp.category ? getSubCategories(sp.category) : Promise.resolve([]),
     getProducts({
@@ -45,6 +99,7 @@ export default async function ProductsPage({
       subCategorySlug: sp.subcategory,
       q: sp.q,
     }),
+    getSettings(),
   ]);
 
   const activeCategory = categories.find((c) => c.slug === sp.category);
@@ -58,8 +113,73 @@ export default async function ProductsPage({
         ? activeCategory.name
         : "All products";
 
+  // Breadcrumb schema
+  const breadcrumbList = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: DEFAULT_PRODUCTION_DOMAIN,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Products",
+        item: `${DEFAULT_PRODUCTION_DOMAIN}/products`,
+      },
+      ...(activeCategory
+        ? [
+            {
+              "@type": "ListItem",
+              position: 3,
+              name: activeCategory.name,
+              item: `${DEFAULT_PRODUCTION_DOMAIN}/products?category=${activeCategory.slug}`,
+            },
+          ]
+        : []),
+      ...(activeSubCategory && activeCategory
+        ? [
+            {
+              "@type": "ListItem",
+              position: 4,
+              name: activeSubCategory.name,
+              item: `${DEFAULT_PRODUCTION_DOMAIN}/products?category=${activeCategory.slug}&subcategory=${activeSubCategory.slug}`,
+            },
+          ]
+        : []),
+    ],
+  };
+
+  // ItemList schema for rich snippets of product collections
+  const itemListSchema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: heading,
+    numberOfItems: products.length,
+    itemListElement: products.slice(0, 20).map((prod, idx) => ({
+      "@type": "ListItem",
+      position: idx + 1,
+      name: prod.name,
+      url: `${DEFAULT_PRODUCTION_DOMAIN}/products/${prod.slug}`,
+    })),
+  };
+
   return (
     <CatalogShell categories={categories} activeSlug={sp.category}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbList) }}
+      />
+      {products.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }}
+        />
+      )}
+
       {/* Horizontal Sub-Category Navigation Bar */}
       {activeCategory && subcategories.length > 0 && (
         <SubCategoryBar

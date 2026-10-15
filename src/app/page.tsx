@@ -13,17 +13,20 @@ import {
   getFeatures,
   getSettings,
 } from "@/lib/data";
-import { getSiteUrl, HOMEPAGE_OG_BANNER } from "@/lib/seo";
+import { DEFAULT_PRODUCTION_DOMAIN } from "@/lib/seo";
 
 export const revalidate = 60;
 
 export async function generateMetadata(): Promise<Metadata> {
-  const [site, url] = await Promise.all([getSettings(), getSiteUrl()]);
-  const title = "NUR SHOP BD - Industrial Machinery, PLC Automation & Spare Parts";
+  const site = await getSettings();
+  const brand = site.brandName || "NurShopBD";
+  const title =
+    site.seo?.defaultTitle ||
+    "NurShopBD | Industrial Machinery, PLC Automation & Spare Parts in Bangladesh";
   const description =
-    "Buy machine spare parts, industrial automation equipment, PLC conversion, servo systems, and technical support services in Bangladesh from NUR SHOP BD.";
-  const ogImage = `${url}/nurshopbd-banner.png`;
-  const brand = site.brandName || "NUR SHOP BD";
+    site.seo?.defaultDescription ||
+    "Discover industrial machinery, automation equipment, PLC & HMI systems, servo motors, VFDs, and genuine machine spare parts at NurShopBD in Bangladesh. Explore products and shop online.";
+  const ogImage = `${DEFAULT_PRODUCTION_DOMAIN}/nurshopbd-banner.png`;
 
   return {
     title: {
@@ -33,16 +36,19 @@ export async function generateMetadata(): Promise<Metadata> {
     keywords: site.seo?.keywords?.length
       ? site.seo.keywords
       : [
+          "NurShopBD",
+          "Nur Shop BD",
+          "NurShopBD online shopping",
           "Industrial Machinery Bangladesh",
           "PLC Automation Bangladesh",
-          "machine spare parts",
-          "PLC conversion",
-          "servo systems",
+          "machine spare parts Bangladesh",
+          "servo systems Bangladesh",
+          "VFD inverters Bangladesh",
+          "hydraulic pumps Bangladesh",
           "technical support services",
-          "NUR SHOP BD",
         ],
     alternates: {
-      canonical: url,
+      canonical: DEFAULT_PRODUCTION_DOMAIN,
     },
     robots: {
       index: true,
@@ -58,7 +64,7 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       type: "website",
       locale: "en_BD",
-      url,
+      url: DEFAULT_PRODUCTION_DOMAIN,
       siteName: brand,
       title,
       description,
@@ -79,6 +85,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
   };
 }
+
 
 export default async function HomePage({
   searchParams,

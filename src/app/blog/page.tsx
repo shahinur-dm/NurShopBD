@@ -3,14 +3,49 @@ import Link from "next/link";
 import { Img } from "@/components/Img";
 import { RelatedSearch } from "@/components/RelatedSearch";
 import { getBlogPosts, getBlogCategories, getSettings, type PopulatedBlogPost } from "@/lib/data";
-
-export const metadata: Metadata = {
-  title: "Engineering Blog & Technical Guides | NUR SHOP BD",
-  description:
-    "Practical industrial automation, PLC, VFD, sensors, motors and electrical maintenance guides written by electrical engineering practitioners in Bangladesh.",
-};
+import { buildPageMetadata, DEFAULT_PRODUCTION_DOMAIN } from "@/lib/seo";
 
 export const revalidate = 60;
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string }>;
+}): Promise<Metadata> {
+  const { category: selectedCategory } = await searchParams;
+  const [site, categories] = await Promise.all([
+    getSettings(),
+    getBlogCategories(),
+  ]);
+
+  const activeCategory = selectedCategory
+    ? categories.find((c) => c.slug === selectedCategory)
+    : undefined;
+
+  const title = activeCategory
+    ? `${activeCategory.name} Engineering Guides & Articles`
+    : "Engineering Blog & Technical Automation Guides";
+  const description =
+    "Practical industrial automation, PLC programming, VFD sizing, sensor integration and electrical machine maintenance guides from NurShopBD engineers in Bangladesh.";
+  const path = selectedCategory
+    ? `/blog?category=${encodeURIComponent(selectedCategory)}`
+    : "/blog";
+
+  return buildPageMetadata({
+    site,
+    title,
+    description,
+    path,
+    keywords: [
+      ...(activeCategory ? [activeCategory.name] : []),
+      "industrial automation blog Bangladesh",
+      "PLC programming guide",
+      "VFD parameter guide",
+      "machine maintenance Bangladesh",
+      "NurShopBD",
+    ],
+  });
+}
 
 export default async function BlogListingPage({
   searchParams,
@@ -23,6 +58,40 @@ export default async function BlogListingPage({
     getBlogCategories(),
     getSettings(),
   ]);
+
+  const activeCategory = selectedCategory
+    ? categories.find((c) => c.slug === selectedCategory)
+    : undefined;
+
+  const breadcrumbList = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: DEFAULT_PRODUCTION_DOMAIN,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Blog",
+        item: `${DEFAULT_PRODUCTION_DOMAIN}/blog`,
+      },
+      ...(activeCategory
+        ? [
+            {
+              "@type": "ListItem",
+              position: 3,
+              name: activeCategory.name,
+              item: `${DEFAULT_PRODUCTION_DOMAIN}/blog?category=${activeCategory.slug}`,
+            },
+          ]
+        : []),
+    ],
+  };
+
   const wa = (site.social?.whatsapp || site.phone || "").replace(/[^\d]/g, "");
 
   const featuredPost = posts.find((p) => p.featured) || posts[0];
@@ -32,7 +101,12 @@ export default async function BlogListingPage({
 
   return (
     <div className="bg-paper min-h-screen py-8 sm:py-10">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbList) }}
+      />
       <div className="container-page space-y-8 sm:space-y-10">
+
         {/* Page Header */}
         <div className="border-b border-line pb-6">
           <div className="flex items-center gap-2 text-xs text-steel">

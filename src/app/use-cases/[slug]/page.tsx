@@ -14,7 +14,7 @@ import {
   getUseCases,
   getSettings,
 } from "@/lib/data";
-import { buildPageMetadata, getSiteUrl } from "@/lib/seo";
+import { buildPageMetadata, DEFAULT_PRODUCTION_DOMAIN } from "@/lib/seo";
 
 export const revalidate = 60;
 
@@ -24,19 +24,24 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const [item, site, baseUrl] = await Promise.all([
+  const [item, site] = await Promise.all([
     getUseCaseBySlug(slug),
     getSettings(),
-    getSiteUrl(),
   ]);
-  if (!item) return { title: "Our Services" };
+  if (!item) return { title: "Our Services | NurShopBD" };
   return buildPageMetadata({
     site,
-    title: item.title,
+    title: `${item.title} - Industrial Application Guidance`,
     description: item.summary,
-    path: `/use-cases/${slug}`,
+    path: `/use-cases/${encodeURIComponent(slug)}`,
     image: item.image,
-    baseUrl,
+    keywords: [
+      item.title,
+      item.industry,
+      "industrial automation application Bangladesh",
+      "machine automation guidance",
+      "NurShopBD",
+    ],
   });
 }
 
@@ -68,8 +73,38 @@ export default async function UseCaseDetailPage({
   ).filter((s) => s !== null);
   const others = allUseCases.filter((entry) => entry.slug !== item.slug);
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: DEFAULT_PRODUCTION_DOMAIN,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Our Services",
+        item: `${DEFAULT_PRODUCTION_DOMAIN}/use-cases`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: item.title,
+        item: `${DEFAULT_PRODUCTION_DOMAIN}/use-cases/${item.slug}`,
+      },
+    ],
+  };
+
   return (
     <CatalogShell categories={categories} showSearch={false}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+
       <article className="overflow-hidden border border-line bg-white">
         <div className="relative h-56 md:h-72">
           <Img

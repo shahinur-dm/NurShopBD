@@ -3,19 +3,24 @@ import { CatalogShell } from "@/components/CatalogShell";
 import { RelatedSearch } from "@/components/RelatedSearch";
 import { Img } from "@/components/Img";
 import { getCategories, getCompany, getSettings } from "@/lib/data";
-import { buildPageMetadata, getSiteUrl } from "@/lib/seo";
+import { buildPageMetadata, DEFAULT_PRODUCTION_DOMAIN } from "@/lib/seo";
 
 export const revalidate = 60;
 
 export async function generateMetadata(): Promise<Metadata> {
-  const [site, baseUrl] = await Promise.all([getSettings(), getSiteUrl()]);
+  const site = await getSettings();
   return buildPageMetadata({
     site,
-    title: "About us",
+    title: "About Us — Industrial Machinery & Spare Parts Desk",
     description:
-      "EEE student-built machine parts desk — PLC, motors, drives and technical service in Bangladesh.",
+      "Learn about NurShopBD — your trusted engineering partner in Bangladesh for industrial machinery, PLC & HMI automation, servo systems, and genuine machine spare parts.",
     path: "/about",
-    baseUrl,
+    keywords: [
+      "About NurShopBD",
+      "NurShopBD team",
+      "industrial engineering Bangladesh",
+      "automation parts supplier Dhaka",
+    ],
   });
 }
 
@@ -25,8 +30,32 @@ export default async function AboutPage() {
     getCompany(),
   ]);
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: DEFAULT_PRODUCTION_DOMAIN,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "About Us",
+        item: `${DEFAULT_PRODUCTION_DOMAIN}/about`,
+      },
+    ],
+  };
+
   return (
     <CatalogShell categories={categories} showSearch={false}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+
       {company?.coverImage && (
         <div className="relative h-56 overflow-hidden border border-line md:h-72">
           <Img

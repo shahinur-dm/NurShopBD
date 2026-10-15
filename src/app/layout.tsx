@@ -8,7 +8,7 @@ import { Footer } from "@/components/Footer";
 import { SiteProvider } from "@/components/SiteProvider";
 import { JsonLd } from "@/components/JsonLd";
 import { Analytics } from "@/components/Analytics";
-import { getAnalyticsIds, getSiteUrl, HOMEPAGE_OG_BANNER } from "@/lib/seo";
+import { getAnalyticsIds, DEFAULT_PRODUCTION_DOMAIN } from "@/lib/seo";
 import { getSettings, getUseCases } from "@/lib/data";
 
 const body = IBM_Plex_Sans({
@@ -34,23 +34,26 @@ export const viewport: Viewport = {
 };
 
 export async function generateMetadata(): Promise<Metadata> {
-  const [site, url] = await Promise.all([getSettings(), getSiteUrl()]);
+  const site = await getSettings();
+  const url = DEFAULT_PRODUCTION_DOMAIN;
   const { searchConsole } = getAnalyticsIds(site);
-  const brand = site.brandName || "NUR SHOP BD";
+  const brand = site.brandName || "NurShopBD";
   const defaultTitle =
-    site.seo?.defaultTitle || "NUR SHOP BD - Industrial Machinery, PLC Automation & Spare Parts";
+    site.seo?.defaultTitle || "NurShopBD | Industrial Machinery, PLC Automation & Spare Parts in Bangladesh";
   const defaultDescription =
     site.seo?.defaultDescription ||
-    "Buy machine spare parts, industrial automation equipment, PLC conversion, servo systems, and technical support services in Bangladesh from NUR SHOP BD.";
+    "Discover industrial machinery, automation equipment, PLC & HMI systems, servo motors, VFDs, and genuine machine spare parts at NurShopBD in Bangladesh. Explore products and shop online.";
   const ogImage = `${url}/nurshopbd-banner.png`;
 
+
   return {
-    metadataBase: new URL(url),
+    metadataBase: new URL(DEFAULT_PRODUCTION_DOMAIN),
     title: {
       default: defaultTitle,
       template: `%s | ${brand}`,
     },
     description: defaultDescription,
+
     keywords: site.seo?.keywords?.length
       ? site.seo.keywords
       : [

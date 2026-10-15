@@ -18,6 +18,10 @@ export function getDefaultSiteUrl(): string {
   return DEFAULT_PRODUCTION_DOMAIN;
 }
 
+export function getCanonicalSiteUrl(): string {
+  return DEFAULT_PRODUCTION_DOMAIN;
+}
+
 export async function getSiteUrl(): Promise<string> {
   try {
     const h = await headers();
@@ -26,11 +30,12 @@ export async function getSiteUrl(): Promise<string> {
       if (host.includes("localhost") || host.includes("127.0.0.1")) {
         return `http://${host}`;
       }
+      // Vercel preview or alias domains must always canonicalize to primary production domain
       if (host.includes("nurshopbd.vercel.app")) {
-        return "https://nurshopbd.vercel.app";
+        return DEFAULT_PRODUCTION_DOMAIN;
       }
       if (host.includes("nurshopbd.net")) {
-        return "https://nurshopbd.net";
+        return DEFAULT_PRODUCTION_DOMAIN;
       }
       const proto = h.get("x-forwarded-proto") || "https";
       return `${proto}://${host}`;
@@ -70,6 +75,7 @@ export function buildPageMetadata({
   path = "/",
   image,
   keywords,
+  robots,
   baseUrl = DEFAULT_PRODUCTION_DOMAIN,
 }: {
   site: ISiteSettings;
@@ -78,24 +84,29 @@ export function buildPageMetadata({
   path?: string;
   image?: string;
   keywords?: string[];
+  robots?: Metadata["robots"];
   baseUrl?: string;
 }): Metadata {
-  const canonical = `${baseUrl}${path === "/" ? "" : path}`;
+  const canonical = `${DEFAULT_PRODUCTION_DOMAIN}${path === "/" ? "" : path}`;
   const desc = description || site.seo?.defaultDescription || site.description;
-  const ogImage = image?.trim() ? toAbsoluteUrl(image, baseUrl) : `${baseUrl}/nurshopbd-banner.png`;
-  const brand = site.brandName || "NUR SHOP BD";
+  const ogImage = image?.trim() ? toAbsoluteUrl(image, baseUrl) : `${DEFAULT_PRODUCTION_DOMAIN}/nurshopbd-banner.png`;
+  const brand = site.brandName || "NurShopBD";
+  const displayTitle = title.includes(brand) ? title : `${title} | ${brand}`;
 
   return {
-    title,
+    title: {
+      absolute: displayTitle,
+    },
     description: desc,
     keywords: keywords?.length ? keywords : site.seo?.keywords || [],
     alternates: { canonical },
+    ...(robots ? { robots } : {}),
     openGraph: {
       type: "website",
       locale: "en_BD",
       url: canonical,
       siteName: brand,
-      title: `${title} | ${brand}`,
+      title: displayTitle,
       description: desc,
       images: [
         {
@@ -108,7 +119,7 @@ export function buildPageMetadata({
     },
     twitter: {
       card: "summary_large_image",
-      title: `${title} | ${brand}`,
+      title: displayTitle,
       description: desc,
       images: [ogImage],
     },
@@ -118,7 +129,7 @@ export function buildPageMetadata({
 export function buildProductMetadata({
   site,
   product,
-  baseUrl = DEFAULT_PRODUCTION_DOMAIN,
+  categoryName,
 }: {
   site: ISiteSettings;
   product: {
@@ -129,31 +140,49 @@ export function buildProductMetadata({
     image?: string;
     sku?: string;
     brand?: string;
+    price?: number;
   };
-  baseUrl?: string;
+  categoryName?: string;
 }): Metadata {
-  const canonical = `${baseUrl}/products/${product.slug}`;
-  const brand = site.brandName || "NUR SHOP BD";
-  const title = `${product.name} | ${brand}`;
-  
+  const canonical = `${DEFAULT_PRODUCTION_DOMAIN}/products/${product.slug}`;
+  const brand = site.brandName || "NurShopBD";
+  const categorySuffix = categoryName && categoryName !== "Category" ? ` - ${categoryName}` : "";
+  const displayTitle = `${product.name}${categorySuffix} | ${brand}`;
+
+
   const rawDesc =
     product.shortDescription ||
     product.description ||
-    `${product.name} available at ${brand}. Industrial machinery, automation components and spare parts in Bangladesh.`;
+    `Buy ${product.name} at ${brand} in Bangladesh. Genuine industrial machinery, automation components and spare parts with fast nationwide delivery.`;
   const cleanDesc = rawDesc
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ")
     .trim()
-    .slice(0, 200);
+    .slice(0, 160);
 
   // Use product's exact featured image if available
   const ogImage = product.image?.trim()
-    ? toAbsoluteUrl(product.image, baseUrl)
-    : `${baseUrl}/nurshopbd-banner.png`;
+    ? toAbsoluteUrl(product.image, DEFAULT_PRODUCTION_DOMAIN)
+    : `${DEFAULT_PRODUCTION_DOMAIN}/nurshopbd-banner.png`;
+
+  const dynamicKeywords = [
+    product.name,
+    `${product.name} Bangladesh`,
+    `${product.name} price in Bangladesh`,
+    `buy ${product.name} online`,
+    ...(product.sku ? [product.sku, `${product.sku} price`] : []),
+    ...(product.brand ? [product.brand, `${product.brand} Bangladesh`] : []),
+    ...(categoryName ? [categoryName, `${categoryName} Bangladesh`] : []),
+    "NurShopBD",
+    "industrial machine spare parts Bangladesh",
+  ];
 
   return {
-    title,
+    title: {
+      absolute: displayTitle,
+    },
     description: cleanDesc,
+    keywords: dynamicKeywords,
     alternates: {
       canonical,
     },
@@ -162,7 +191,7 @@ export function buildProductMetadata({
       locale: "en_BD",
       url: canonical,
       siteName: brand,
-      title: `${product.name} | ${brand}`,
+      title: displayTitle,
       description: cleanDesc,
       images: [
         {
@@ -175,12 +204,14 @@ export function buildProductMetadata({
     },
     twitter: {
       card: "summary_large_image",
-      title: `${product.name} | ${brand}`,
+      title: displayTitle,
       description: cleanDesc,
       images: [ogImage],
     },
   };
 }
+
+
 
 export function getAnalyticsIds(site?: ISiteSettings | null) {
   return {

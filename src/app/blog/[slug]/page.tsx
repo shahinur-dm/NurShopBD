@@ -9,7 +9,7 @@ import {
   getBlogPosts,
   getSettings,
 } from "@/lib/data";
-import { buildPageMetadata, getSiteUrl } from "@/lib/seo";
+import { buildPageMetadata, DEFAULT_PRODUCTION_DOMAIN } from "@/lib/seo";
 
 export const revalidate = 60;
 
@@ -19,13 +19,12 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const [post, site, baseUrl] = await Promise.all([
+  const [post, site] = await Promise.all([
     getBlogPostBySlug(slug),
     getSettings(),
-    getSiteUrl(),
   ]);
   if (!post) {
-    return { title: "Article Not Found | NUR SHOP BD" };
+    return { title: "Article Not Found | NurShopBD" };
   }
   return buildPageMetadata({
     site,
@@ -33,7 +32,12 @@ export async function generateMetadata({
     description: post.summary,
     path: `/blog/${slug}`,
     image: post.coverImage,
-    baseUrl,
+    keywords: [
+      post.title,
+      ...(post.tags || []),
+      "NurShopBD",
+      "industrial automation guide Bangladesh",
+    ],
   });
 }
 
@@ -43,7 +47,10 @@ export default async function BlogDetailsPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const post = await getBlogPostBySlug(slug);
+  const [post, siteSettings] = await Promise.all([
+    getBlogPostBySlug(slug),
+    getSettings(),
+  ]);
   if (!post) notFound();
 
   const categorySlug =
@@ -54,6 +61,58 @@ export default async function BlogDetailsPage({
       : "Industrial Automation";
 
   const relatedPosts = await getRelatedBlogPosts(post.slug, categorySlug, 3);
+
+  const articleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    description: post.summary,
+    image: post.coverImage ? [post.coverImage] : [`${DEFAULT_PRODUCTION_DOMAIN}/nurshopbd-banner.png`],
+    datePublished: post.createdAt ? new Date(post.createdAt).toISOString() : new Date().toISOString(),
+    dateModified: post.updatedAt ? new Date(post.updatedAt).toISOString() : (post.createdAt ? new Date(post.createdAt).toISOString() : new Date().toISOString()),
+    author: {
+      "@type": "Person",
+      name: post.author || "NurShopBD Desk",
+    },
+    publisher: {
+      "@type": "Organization",
+      name: siteSettings?.brandName || "NurShopBD",
+      logo: {
+        "@type": "ImageObject",
+        url: `${DEFAULT_PRODUCTION_DOMAIN}/nurshopbd-banner.png`,
+      },
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `${DEFAULT_PRODUCTION_DOMAIN}/blog/${post.slug}`,
+    },
+  };
+
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: DEFAULT_PRODUCTION_DOMAIN,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Blog",
+        item: `${DEFAULT_PRODUCTION_DOMAIN}/blog`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: post.title,
+        item: `${DEFAULT_PRODUCTION_DOMAIN}/blog/${post.slug}`,
+      },
+    ],
+  };
+
 
   // Helper to render markdown-formatted content nicely
   const renderFormattedContent = (raw: string) => {
@@ -153,10 +212,19 @@ export default async function BlogDetailsPage({
 
   return (
     <div className="bg-paper min-h-screen py-8 sm:py-10">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       <div className="container-page space-y-10">
         {/* Breadcrumb Header */}
         <nav className="flex items-center gap-2 text-xs text-steel">
           <Link href="/" className="hover:text-orange transition">
+
             Home
           </Link>
           <span>/</span>

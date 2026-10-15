@@ -4,19 +4,25 @@ import { CatalogShell } from "@/components/CatalogShell";
 import { RelatedSearch } from "@/components/RelatedSearch";
 import { ServiceCard } from "@/components/ServiceCard";
 import { getCategories, getServices, getSettings } from "@/lib/data";
-import { buildPageMetadata, getSiteUrl } from "@/lib/seo";
+import { buildPageMetadata, DEFAULT_PRODUCTION_DOMAIN } from "@/lib/seo";
 
 export const revalidate = 60;
 
 export async function generateMetadata(): Promise<Metadata> {
-  const [site, baseUrl] = await Promise.all([getSettings(), getSiteUrl()]);
+  const site = await getSettings();
   return buildPageMetadata({
     site,
-    title: "Technical services",
+    title: "Industrial Automation & Technical Engineering Services",
     description:
-      "PLC support, motor-drive matching, panel parts kits and spare-parts sourcing.",
+      "Professional industrial engineering and technical services in Bangladesh: PLC programming, VFD motor drive matching, control panel retrofits, and spare parts sourcing from NurShopBD.",
     path: "/services",
-    baseUrl,
+    keywords: [
+      "industrial automation services Bangladesh",
+      "PLC programming Bangladesh",
+      "VFD inverter support",
+      "machine troubleshooting Bangladesh",
+      "NurShopBD",
+    ],
   });
 }
 
@@ -26,8 +32,32 @@ export default async function ServicesPage() {
     getServices(),
   ]);
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: DEFAULT_PRODUCTION_DOMAIN,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Services",
+        item: `${DEFAULT_PRODUCTION_DOMAIN}/services`,
+      },
+    ],
+  };
+
   return (
     <CatalogShell categories={categories}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+
       <div className="section-label">Technical service provider</div>
       <p className="-mt-2 mb-4 max-w-2xl text-sm leading-6 text-steel">
         We sell parts and we help you use them — selection, substitution and
